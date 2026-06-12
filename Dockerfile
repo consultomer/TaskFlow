@@ -12,7 +12,7 @@ COPY . .
 # Create virtual environment and install dependencies
 RUN uv venv && \
     . .venv/bin/activate && \
-    uv sync --frozen
+    uv sync
 
 # ---- Runtime Stage ----
 FROM python:3.12-slim
