@@ -32,14 +32,17 @@ ENV PATH="/app/.venv/bin:$PATH"
 COPY --from=builder /app/.venv /app/.venv
 
 # Copy application code (exclude via .dockerignore)
-COPY app.py main.py ./
+COPY app.py main.py start_production.sh ./
 COPY routes/ routes/
 COPY static/ static/
 COPY templates/ templates/
 COPY utils/ utils/
 
+# Make startup script executable
+RUN chmod +x start_production.sh
+
 # Copy env file if available, otherwise create empty
-COPY .env.example .env
+COPY .env .env
 
 # Create volume mount for database persistence
 VOLUME ["/app/data"]
@@ -50,5 +53,5 @@ ENV DATABASE_PATH=/app/data/tasks.db
 ENV HOST=0.0.0.0
 ENV PORT=5001
 
-# Use gunicorn for production
-CMD ["gunicorn", "--bind", "0.0.0.0:5001", "--workers", "4", "--timeout", "120", "--access-logfile", "-", "--error-logfile", "-", "--log-level", "info", "app:app"]
+# Use the startup script to ensure database initialization before gunicorn workers start
+CMD ["./start_production.sh"]

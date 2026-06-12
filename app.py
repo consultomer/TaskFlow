@@ -21,15 +21,6 @@ if DOMAIN:
 # Import database utilities
 from utils.database import init_db, init_admin_user, DATABASE_PATH, migrate_json_to_sqlite
 
-# Initialize database on startup
-init_db()
-logger.info(f"Database initialized at: {DATABASE_PATH}")
-
-# Ensure admin user exists
-admin = init_admin_user()
-if admin:
-    logger.info(f"Default admin user ready: {admin['username']}")
-
 # Register Blueprints
 from routes import auth_bp, pages_bp, tasks_bp, timer_bp, user_bp, admin_bp
 
@@ -42,6 +33,15 @@ app.register_blueprint(admin_bp)
 
 
 if __name__ == "__main__":
+    # Initialize database on startup (for development)
+    init_db()
+    logger.info(f"Database initialized at: {DATABASE_PATH}")
+
+    # Ensure admin user exists
+    admin = init_admin_user()
+    if admin:
+        logger.info(f"Default admin user ready: {admin['username']}")
+
     # Auto-migrate from JSON if tasks.json exists
     json_file = os.path.join(os.path.dirname(__file__), "tasks.json")
     if os.path.exists(json_file):

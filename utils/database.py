@@ -22,10 +22,11 @@ logger.info(f"Database path configured: {DATABASE_PATH}")
 def get_db_connection():
     """Get a database connection with row factory"""
     try:
-        conn = sqlite3.connect(DATABASE_PATH)
+        # Increase timeout to 30 seconds to handle concurrent startup initialization
+        conn = sqlite3.connect(DATABASE_PATH, timeout=30.0)
         conn.row_factory = sqlite3.Row
-        conn.execute("PRAGMA journal_mode=WAL")  # Better concurrency
-        conn.execute("PRAGMA synchronous=NORMAL")  # Balance safety and performance
+        # foreign_keys must be enabled per connection
+        conn.execute("PRAGMA foreign_keys = ON")
         return conn
     except Exception as e:
         logger.error(f"Failed to connect to database: {e}")
@@ -88,6 +89,9 @@ def init_db():
     """Initialize database tables"""
     try:
         conn = get_db_connection()
+        # Ensure WAL mode for better concurrency
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.execute("PRAGMA synchronous=NORMAL")
         cursor = conn.cursor()
 
         # Create users table
