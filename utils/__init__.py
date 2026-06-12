@@ -11,5 +11,5 @@ from .database import (
     delete_task,
     get_active_timer,
     get_paused_timer,
-    migrate_json_to_sqlite
+    migrate_json_to_sqlite,
 )

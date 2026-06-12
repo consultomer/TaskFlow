@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateGreeting();
     loadTasks();
     startTimerUpdate();
-    
+
     // Load users if admin
     if (isAdmin) {
         loadUsers();
@@ -30,9 +30,9 @@ function updateGreeting() {
     let greeting = 'Good morning';
     if (hour >= 12 && hour < 17) greeting = 'Good afternoon';
     else if (hour >= 17) greeting = 'Good evening';
-    
+
     document.getElementById('greeting').textContent = `${greeting}, admin`;
-    
+
     const now = new Date();
     const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
     document.getElementById('dateInfo').textContent = now.toLocaleDateString('en-US', options);
@@ -42,19 +42,19 @@ function updateGreeting() {
 async function apiFetch(url, options = {}) {
     try {
         const response = await fetch(url, options);
-        
+
         // Check for 401 Unauthorized
         if (response.status === 401) {
             // Session expired, redirect to login
             window.location.href = '/login';
             return null;
         }
-        
+
         if (!response.ok) {
             const error = await response.json().catch(() => ({ error: 'Request failed' }));
             throw new Error(error.error || 'Request failed');
         }
-        
+
         return response.json();
     } catch (error) {
         console.error('API Error:', error);
@@ -81,19 +81,19 @@ async function loadTasks() {
 function renderTasks() {
     const taskList = document.getElementById('taskList');
     let filteredTasks = tasks;
-    
+
     // Filter by status (all/active/completed)
     if (currentFilter === 'active') {
         filteredTasks = filteredTasks.filter(t => !t.completed);
     } else if (currentFilter === 'completed') {
         filteredTasks = filteredTasks.filter(t => t.completed);
     }
-    
+
     // Filter by category
     if (currentCategory) {
         filteredTasks = filteredTasks.filter(t => t.category === currentCategory);
     }
-    
+
     // Sort: active first, then by creation date (newest first)
     filteredTasks.sort((a, b) => {
         if (a.timer_active && !b.timer_active) return -1;
@@ -101,7 +101,7 @@ function renderTasks() {
         if (a.completed !== b.completed) return a.completed ? 1 : -1;
         return new Date(b.created_at) - new Date(a.created_at);
     });
-    
+
     if (filteredTasks.length === 0) {
         let emptyMessage = 'No tasks yet. Create your first task!';
         if (currentFilter === 'active') emptyMessage = 'No active tasks. Great job!';
@@ -110,7 +110,7 @@ function renderTasks() {
             const categoryLabel = currentCategory.charAt(0).toUpperCase() + currentCategory.slice(1);
             emptyMessage = `No tasks in ${categoryLabel} category.`;
         }
-        
+
         taskList.innerHTML = `
             <div class="empty-state">
                 <i class="ti ti-circle-check"></i>
@@ -120,14 +120,14 @@ function renderTasks() {
         document.getElementById('taskCount').textContent = '0 tasks';
         return;
     }
-    
+
     taskList.innerHTML = filteredTasks.map(task => {
         const categoryClass = task.category || 'general';
         const categoryLabel = getCategoryLabel(task.category);
         const isCompleted = task.completed;
         const isActive = task.timer_active;
         const isPaused = task.timer_paused;
-        
+
         // Format time consistently as HH:MM:SS
         let timeDisplay = '';
         if (isCompleted) {
@@ -141,7 +141,7 @@ function renderTasks() {
             const totalMinutes = Math.floor((task.total_time || 0) / 60);
             timeDisplay = totalMinutes > 0 ? `<i class="ti ti-clock"></i> ${formatTime(task.total_time || 0)}` : '';
         }
-        
+
         // Check if overdue
         let overdueClass = '';
         if (!isCompleted && task.due_date) {
@@ -151,7 +151,7 @@ function renderTasks() {
                 timeDisplay = `<i class="ti ti-alert-triangle" style="color:#A32D2D;font-size:13px"></i> Overdue`;
             }
         }
-        
+
         // Description display (truncate if too long)
         let descriptionHtml = '';
         if (task.description && task.description.trim()) {
@@ -159,7 +159,7 @@ function renderTasks() {
             const displayDesc = desc.length > 60 ? desc.substring(0, 60) + '...' : desc;
             descriptionHtml = `<div class="t-desc">${escapeHtml(displayDesc)}</div>`;
         }
-        
+
         return `
             <div class="task-item" data-task-id="${task.id}">
                 <div class="chk ${isCompleted ? 'done' : ''}" onclick="toggleComplete(${task.id})">
@@ -185,13 +185,13 @@ function renderTasks() {
             </div>
         `;
     }).join('');
-    
+
     document.getElementById('taskCount').textContent = `${filteredTasks.length} task${filteredTasks.length !== 1 ? 's' : ''}`;
-    
+
     // Update active timer
     const activeTask = tasks.find(t => t.timer_active);
     const pausedTask = tasks.find(t => t.timer_paused);
-    
+
     if (activeTask) {
         activeTaskId = activeTask.id;
         document.getElementById('timerTask').textContent = activeTask.name;
@@ -255,14 +255,14 @@ function updateStats() {
         const today = new Date().toDateString();
         return completedDate === today;
     }).length;
-    
+
     // In progress = all non-completed tasks (consistent with label "in progress")
     const inProgress = tasks.filter(t => !t.completed).length;
     const overdue = tasks.filter(t => {
         if (t.completed || !t.due_date) return false;
         return new Date(t.due_date) < new Date();
     }).length;
-    
+
     // Calculate total time including active timer
     let totalTime = tasks.reduce((sum, t) => sum + (t.total_time || 0), 0);
     const activeTask = tasks.find(t => t.timer_active);
@@ -273,10 +273,10 @@ function updateStats() {
         // Add current elapsed time (accumulated + current session)
         totalTime = totalTime - (activeTask.accumulated_time || 0) + (activeTask.accumulated_time || 0) + diffSecs;
     }
-    
+
     const hours = Math.floor(totalTime / 3600);
     const minutes = Math.floor((totalTime % 3600) / 60);
-    
+
     document.getElementById('statTotal').textContent = totalTasks;
     document.getElementById('statInProgress').textContent = inProgress;
     document.getElementById('statCompleted').textContent = completedToday;
@@ -295,17 +295,17 @@ function startTimerUpdate() {
             const now = new Date();
             const diffSecs = Math.max(0, Math.floor((now - start) / 1000));
             const elapsed = diffSecs + (activeTask.accumulated_time || 0);
-            
+
             // Update sidebar timer
             const displayEl = document.getElementById('timerDisplay');
             if (displayEl) displayEl.textContent = formatTime(elapsed);
-            
+
             // Update task list timer
             const taskEl = document.querySelector(`[data-task-id="${activeTask.id}"] .task-time`);
             if (taskEl) {
                 taskEl.innerHTML = `<i class="ti ti-player-play" style="color:#534AB7"></i> ${formatTime(elapsed)}`;
             }
-            
+
             // Update time tracked stat
             updateStats();
         }
@@ -316,7 +316,7 @@ function startTimerUpdate() {
 function updateTimerDisplay() {
     const activeTask = tasks.find(t => t.timer_active);
     const pausedTask = tasks.find(t => t.timer_paused);
-    
+
     if (activeTask) {
         const start = new Date(activeTask.timer_start);
         const elapsed = Math.floor((new Date() - start) / 1000) + (activeTask.accumulated_time || 0);
@@ -333,7 +333,7 @@ function toggleMobileMenu() {
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('mobileOverlay');
     mobileMenuOpen = !mobileMenuOpen;
-    
+
     if (mobileMenuOpen) {
         sidebar.classList.add('mobile-open');
         overlay.classList.add('show');
@@ -361,7 +361,7 @@ function showNewTaskModal() {
 function showEditModal(taskId) {
     const task = tasks.find(t => t.id === taskId);
     if (!task) return;
-    
+
     document.getElementById('editTaskId').value = task.id;
     document.getElementById('editTaskName').value = task.name;
     document.getElementById('editTaskDescription').value = task.description || '';
@@ -369,7 +369,7 @@ function showEditModal(taskId) {
     document.getElementById('editTaskDueDate').value = task.due_date || '';
     document.getElementById('editTaskNameError').style.display = 'none';
     hasValidationErrors = false;
-    
+
     document.getElementById('editTaskModal').classList.add('show');
     document.getElementById('editTaskName').focus();
 }
@@ -378,7 +378,7 @@ function showEditModal(taskId) {
 function showDeleteModal(taskId) {
     const task = tasks.find(t => t.id === taskId);
     if (!task) return;
-    
+
     deleteTaskId = taskId;
     document.getElementById('deleteTaskName').textContent = task.name;
     document.getElementById('deleteTaskModal').classList.add('show');
@@ -390,7 +390,7 @@ function closeModal(modalId) {
     if (hasValidationErrors) {
         return;
     }
-    
+
     document.getElementById(modalId).classList.remove('show');
     if (modalId === 'newTaskModal') {
         document.getElementById('newTaskForm').reset();
@@ -406,12 +406,12 @@ function closeModal(modalId) {
 // Create new task
 async function createTask(event) {
     event.preventDefault();
-    
+
     const name = document.getElementById('taskName').value.trim();
     const description = document.getElementById('taskDescription').value.trim();
     const category = document.getElementById('taskCategory').value;
     const dueDate = document.getElementById('taskDueDate').value || null;
-    
+
     // Validate
     if (!name) {
         document.getElementById('taskNameError').style.display = 'block';
@@ -419,17 +419,17 @@ async function createTask(event) {
         hasValidationErrors = true;
         return;
     }
-    
+
     hasValidationErrors = false;
     document.getElementById('taskNameError').style.display = 'none';
-    
+
     try {
         const newTask = await apiFetch('/api/tasks', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name, description, category, due_date: dueDate })
         });
-        
+
         if (newTask) {
             // Reload tasks from server to ensure consistency
             await loadTasks();
@@ -449,13 +449,13 @@ async function createTask(event) {
 // Save edit task
 async function saveEditTask(event) {
     event.preventDefault();
-    
+
     const taskId = parseInt(document.getElementById('editTaskId').value);
     const name = document.getElementById('editTaskName').value.trim();
     const description = document.getElementById('editTaskDescription').value.trim();
     const category = document.getElementById('editTaskCategory').value;
     const dueDate = document.getElementById('editTaskDueDate').value || null;
-    
+
     // Validate
     if (!name) {
         document.getElementById('editTaskNameError').style.display = 'block';
@@ -463,17 +463,17 @@ async function saveEditTask(event) {
         hasValidationErrors = true;
         return;
     }
-    
+
     hasValidationErrors = false;
     document.getElementById('editTaskNameError').style.display = 'none';
-    
+
     try {
         const updatedTask = await apiFetch(`/api/tasks/${taskId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name, description, category, due_date: dueDate })
         });
-        
+
         if (updatedTask) {
             // Reload tasks from server
             await loadTasks();
@@ -493,12 +493,12 @@ async function saveEditTask(event) {
 // Confirm delete task
 async function confirmDeleteTask() {
     if (!deleteTaskId) return;
-    
+
     const taskName = tasks.find(t => t.id === deleteTaskId)?.name || 'Task';
-    
+
     try {
         const result = await apiFetch(`/api/tasks/${deleteTaskId}/delete`, { method: 'DELETE' });
-        
+
         if (result && result.success) {
             // Reload tasks from server
             await loadTasks();
@@ -514,11 +514,11 @@ async function confirmDeleteTask() {
 async function toggleComplete(taskId) {
     try {
         const updatedTask = await apiFetch(`/api/tasks/${taskId}/complete`, { method: 'POST' });
-        
+
         if (updatedTask) {
             // Reload tasks from server
             await loadTasks();
-            
+
             const action = updatedTask.completed ? 'completed' : 'reopened';
             addActivity(`Task ${action}`, updatedTask.name);
         }
@@ -531,7 +531,7 @@ async function toggleComplete(taskId) {
 async function startTimer(taskId) {
     try {
         const updatedTask = await apiFetch(`/api/tasks/${taskId}/timer/start`, { method: 'POST' });
-        
+
         if (updatedTask) {
             // Reload tasks from server
             await loadTasks();
@@ -550,9 +550,9 @@ async function resumeTimer(taskId) {
 // Toggle pause/resume
 async function toggleTimer() {
     if (!activeTaskId) return;
-    
+
     const activeTask = tasks.find(t => t.id === activeTaskId);
-    
+
     if (activeTask && activeTask.timer_active) {
         // Pause
         await pauseTimer();
@@ -565,10 +565,10 @@ async function toggleTimer() {
 // Pause timer
 async function pauseTimer() {
     if (!activeTaskId) return;
-    
+
     try {
         const updatedTask = await apiFetch(`/api/tasks/${activeTaskId}/timer/pause`, { method: 'POST' });
-        
+
         if (updatedTask) {
             // Reload tasks from server
             await loadTasks();
@@ -582,10 +582,10 @@ async function pauseTimer() {
 // Stop timer
 async function stopTimer() {
     if (!activeTaskId) return;
-    
+
     try {
         const updatedTask = await apiFetch(`/api/tasks/${activeTaskId}/timer/stop`, { method: 'POST' });
-        
+
         if (updatedTask) {
             // Reload tasks from server
             await loadTasks();
@@ -601,16 +601,16 @@ async function stopTimer() {
 function setFilter(filter, element) {
     currentFilter = filter;
     currentCategory = null;
-    
+
     // Update active pill
     document.querySelectorAll('.filter-pill').forEach(pill => pill.classList.remove('active'));
     if (element) element.classList.add('active');
-    
+
     // Update nav items
     document.querySelectorAll('.nav-item').forEach(item => {
         item.classList.remove('active');
     });
-    
+
     // Highlight the appropriate nav item
     const navItems = document.querySelectorAll('#navSection .nav-item');
     if (filter === 'all') {
@@ -620,7 +620,7 @@ function setFilter(filter, element) {
     } else if (filter === 'completed') {
         if (navItems[3]) navItems[3].classList.add('active'); // Completed
     }
-    
+
     renderTasks();
     closeMobileMenu();
 }
@@ -629,14 +629,14 @@ function setFilter(filter, element) {
 function filterByCategory(category) {
     currentCategory = category;
     currentFilter = 'all';
-    
+
     // Reset filter pills
     document.querySelectorAll('.filter-pill').forEach(pill => pill.classList.remove('active'));
     document.querySelector('.filter-pill').classList.add('active');
-    
+
     // Update nav items - remove active from workspace items
     document.querySelectorAll('#navSection .nav-item').forEach(item => item.classList.remove('active'));
-    
+
     // Highlight the selected category
     document.querySelectorAll('#categorySection .nav-item').forEach(item => {
         item.classList.remove('active');
@@ -644,7 +644,7 @@ function filterByCategory(category) {
             item.classList.add('active');
         }
     });
-    
+
     renderTasks();
     closeMobileMenu();
 }
@@ -653,10 +653,10 @@ function filterByCategory(category) {
 function filterTasks(filter) {
     currentFilter = filter;
     currentCategory = null;
-    
+
     // Reset category highlighting
     document.querySelectorAll('#categorySection .nav-item').forEach(item => item.classList.remove('active'));
-    
+
     // Update filter pills
     document.querySelectorAll('.filter-pill').forEach(pill => {
         pill.classList.remove('active');
@@ -667,10 +667,10 @@ function filterTasks(filter) {
             pill.classList.add('active');
         }
     });
-    
+
     // Update nav items
     document.querySelectorAll('#navSection .nav-item').forEach(item => item.classList.remove('active'));
-    
+
     // Highlight the appropriate nav item
     const navItems = document.querySelectorAll('#navSection .nav-item');
     if (filter === 'all') {
@@ -681,7 +681,7 @@ function filterTasks(filter) {
     } else if (filter === 'completed') {
         if (navItems[3]) navItems[3].classList.add('active'); // Completed
     }
-    
+
     renderTasks();
     closeMobileMenu();
 }
@@ -691,7 +691,7 @@ function addActivity(action, taskName) {
     const feed = document.getElementById('activityFeed');
     const now = new Date();
     const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-    
+
     const icons = {
         'created': { icon: 'ti ti-circle-plus', color: '#0F6E56', bg: '#E1F5EE' },
         'completed': { icon: 'ti ti-check', color: '#534AB7', bg: '#EEEDFE' },
@@ -703,7 +703,7 @@ function addActivity(action, taskName) {
         'updated': { icon: 'ti ti-edit', color: '#BA7517', bg: '#FAEEDA' },
         'renamed': { icon: 'ti ti-edit', color: '#BA7517', bg: '#FAEEDA' }
     };
-    
+
     let iconKey = 'created';
     if (action.includes('completed')) iconKey = 'completed';
     else if (action.includes('reopened')) iconKey = 'reopened';
@@ -713,9 +713,9 @@ function addActivity(action, taskName) {
     else if (action.includes('paused')) iconKey = 'paused';
     else if (action.includes('updated')) iconKey = 'updated';
     else if (action.includes('renamed')) iconKey = 'renamed';
-    
+
     const iconConfig = icons[iconKey];
-    
+
     const activityHtml = `
         <div class="activity-item">
             <div class="act-icon" style="background:${iconConfig.bg}">
@@ -727,9 +727,9 @@ function addActivity(action, taskName) {
             </div>
         </div>
     `;
-    
+
     feed.insertAdjacentHTML('afterbegin', activityHtml);
-    
+
     // Keep only last 5 activities
     while (feed.children.length > 5) {
         feed.removeChild(feed.lastChild);
@@ -787,12 +787,12 @@ async function loadUsers() {
 function renderUsers() {
     const userList = document.getElementById('adminUserList');
     if (!userList) return;
-    
+
     if (users.length === 0) {
         userList.innerHTML = '<p class="text-muted">No users found.</p>';
         return;
     }
-    
+
     userList.innerHTML = users.map(user => `
         <div class="user-item" style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee;">
             <div>
@@ -830,34 +830,34 @@ function showCreateUserModal() {
 // Create user
 async function createUser(event) {
     event.preventDefault();
-    
+
     const username = document.getElementById('newUsername').value.trim();
     const password = document.getElementById('newPassword').value;
     const isAdmin = document.getElementById('newIsAdmin').checked;
-    
+
     // Validate
     if (!username) {
         document.getElementById('newUsernameError').style.display = 'block';
         document.getElementById('newUsername').focus();
         return;
     }
-    
+
     if (!password || password.length < 6) {
         document.getElementById('newPasswordError').style.display = 'block';
         document.getElementById('newPassword').focus();
         return;
     }
-    
+
     document.getElementById('newUsernameError').style.display = 'none';
     document.getElementById('newPasswordError').style.display = 'none';
-    
+
     try {
         const newUser = await apiFetch('/api/admin/users', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password, is_admin: isAdmin })
         });
-        
+
         if (newUser) {
             await loadUsers();
             closeModal('createUserModal');
@@ -876,12 +876,12 @@ async function createUser(event) {
 function showEditUserModal(userId) {
     const user = users.find(u => u.id === userId);
     if (!user) return;
-    
+
     document.getElementById('editUserId').value = user.id;
     document.getElementById('editUsername').value = user.username;
     document.getElementById('editIsAdmin').checked = !!user.is_admin;
     document.getElementById('editUsernameError').style.display = 'none';
-    
+
     document.getElementById('editUserModal').classList.add('show');
     document.getElementById('editUsername').focus();
 }
@@ -889,27 +889,27 @@ function showEditUserModal(userId) {
 // Update user
 async function updateUser(event) {
     event.preventDefault();
-    
+
     const userId = parseInt(document.getElementById('editUserId').value);
     const username = document.getElementById('editUsername').value.trim();
     const isAdmin = document.getElementById('editIsAdmin').checked;
-    
+
     // Validate
     if (!username) {
         document.getElementById('editUsernameError').style.display = 'block';
         document.getElementById('editUsername').focus();
         return;
     }
-    
+
     document.getElementById('editUsernameError').style.display = 'none';
-    
+
     try {
         const updatedUser = await apiFetch(`/api/users/${userId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, is_admin: isAdmin })
         });
-        
+
         if (updatedUser) {
             await loadUsers();
             closeModal('editUserModal');
@@ -927,11 +927,11 @@ async function updateUser(event) {
 function showChangePasswordModal(userId) {
     const user = users.find(u => u.id === userId);
     if (!user) return;
-    
+
     document.getElementById('changePasswordUserId').value = user.id;
     document.getElementById('changePasswordUsername').textContent = user.username;
     document.getElementById('newUserPasswordError').style.display = 'none';
-    
+
     document.getElementById('changePasswordModal').classList.add('show');
     document.getElementById('newUserPassword').focus();
 }
@@ -939,26 +939,26 @@ function showChangePasswordModal(userId) {
 // Change user password
 async function changeUserPassword(event) {
     event.preventDefault();
-    
+
     const userId = parseInt(document.getElementById('changePasswordUserId').value);
     const password = document.getElementById('newUserPassword').value;
-    
+
     // Validate
     if (!password || password.length < 6) {
         document.getElementById('newUserPasswordError').style.display = 'block';
         document.getElementById('newUserPassword').focus();
         return;
     }
-    
+
     document.getElementById('newUserPasswordError').style.display = 'none';
-    
+
     try {
         const result = await apiFetch(`/api/users/${userId}/password`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ password })
         });
-        
+
         if (result && result.success) {
             closeModal('changePasswordModal');
             document.getElementById('changePasswordForm').reset();
@@ -976,7 +976,7 @@ async function changeUserPassword(event) {
 function showDeleteUserModal(userId) {
     const user = users.find(u => u.id === userId);
     if (!user) return;
-    
+
     deleteUserId = userId;
     document.getElementById('deleteUsername').textContent = user.username;
     document.getElementById('deleteUserModal').classList.add('show');
@@ -985,10 +985,10 @@ function showDeleteUserModal(userId) {
 // Confirm delete user
 async function confirmDeleteUser() {
     if (!deleteUserId) return;
-    
+
     try {
         const result = await apiFetch(`/api/users/${deleteUserId}`, { method: 'DELETE' });
-        
+
         if (result && result.success) {
             await loadUsers();
             closeModal('deleteUserModal');

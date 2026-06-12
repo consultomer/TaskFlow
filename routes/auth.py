@@ -86,6 +86,7 @@ def login():
 
 
 @auth_bp.route("/register", methods=["GET", "POST"])
+@admin_required
 def register():
     """Registration page with token authentication"""
     reg_token = os.getenv("REGISTRATION_TOKEN", "")

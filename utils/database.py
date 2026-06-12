@@ -108,7 +108,7 @@ def init_db():
             logger.info("Added is_admin column to users table")
         except sqlite3.OperationalError:
             pass  # Column already exists
-            
+
         try:
             cursor.execute("ALTER TABLE users ADD COLUMN registration_token TEXT")
             logger.info("Added registration_token column to users table")
@@ -163,8 +163,8 @@ def create_user(username, password_hash, is_admin=False, registration_token=None
         cursor = conn.cursor()
 
         cursor.execute(
-            "INSERT INTO users (username, password_hash, is_admin, registration_token) VALUES (?, ?, ?, ?)", 
-            (username, password_hash, is_admin, registration_token)
+            "INSERT INTO users (username, password_hash, is_admin, registration_token) VALUES (?, ?, ?, ?)",
+            (username, password_hash, is_admin, registration_token),
         )
         conn.commit()
         user_id = cursor.lastrowid
@@ -206,7 +206,9 @@ def get_user_by_id(user_id):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT id, username, is_admin, created_at FROM users WHERE id = ?", (user_id,))
+        cursor.execute(
+            "SELECT id, username, is_admin, created_at FROM users WHERE id = ?", (user_id,)
+        )
         user = cursor.fetchone()
         return dict(user) if user else None
     except Exception as e:
@@ -223,7 +225,9 @@ def get_all_users():
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT id, username, is_admin, created_at FROM users ORDER BY created_at DESC")
+        cursor.execute(
+            "SELECT id, username, is_admin, created_at FROM users ORDER BY created_at DESC"
+        )
         users = cursor.fetchall()
         return [dict(user) for user in users]
     except Exception as e:
@@ -237,40 +241,42 @@ def get_all_users():
 def update_user(user_id, **kwargs):
     """Update a user (for admin)"""
     allowed_fields = ["username", "is_admin"]
-    
+
     # Filter allowed fields
     updates = {k: v for k, v in kwargs.items() if k in allowed_fields}
-    
+
     if not updates:
         logger.warning(f"No valid fields to update for user {user_id}")
         return None
-    
+
     conn = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        
+
         # Build UPDATE query
         set_clause = ", ".join([f"{k} = ?" for k in updates.keys()])
         values = list(updates.values()) + [user_id]
-        
+
         cursor.execute(f"UPDATE users SET {set_clause} WHERE id = ?", values)
         conn.commit()
-        
+
         if cursor.rowcount == 0:
             logger.warning(f"No user found to update: id={user_id}")
             return None
-        
-        cursor.execute("SELECT id, username, is_admin, created_at FROM users WHERE id = ?", (user_id,))
+
+        cursor.execute(
+            "SELECT id, username, is_admin, created_at FROM users WHERE id = ?", (user_id,)
+        )
         user = cursor.fetchone()
-        
+
         if user:
             logger.info(f"User updated: {user_id}")
             return dict(user)
         else:
             logger.error(f"User not found after update: {user_id}")
             return None
-            
+
     except Exception as e:
         logger.error(f"Failed to update user {user_id}: {e}")
         if conn:
@@ -290,12 +296,12 @@ def delete_user(user_id):
         cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
         deleted = cursor.rowcount > 0
         conn.commit()
-        
+
         if deleted:
             logger.info(f"User deleted: {user_id}")
         else:
             logger.warning(f"User not found for deletion: {user_id}")
-            
+
         return deleted
     except Exception as e:
         logger.error(f"Failed to delete user {user_id}: {e}")
@@ -313,13 +319,15 @@ def change_user_password(user_id, new_password_hash):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("UPDATE users SET password_hash = ? WHERE id = ?", (new_password_hash, user_id))
+        cursor.execute(
+            "UPDATE users SET password_hash = ? WHERE id = ?", (new_password_hash, user_id)
+        )
         conn.commit()
-        
+
         if cursor.rowcount == 0:
             logger.warning(f"No user found to change password: id={user_id}")
             return False
-        
+
         logger.info(f"Password changed for user: {user_id}")
         return True
     except Exception as e:
@@ -361,7 +369,7 @@ def create_task(user_id, name, category="general", due_date=None, description=""
             INSERT INTO tasks (user_id, name, description, category, due_date)
             VALUES (?, ?, ?, ?, ?)
         """,
-            (user_id, name, description or '', category, due_date),
+            (user_id, name, description or "", category, due_date),
         )
 
         conn.commit()
@@ -370,14 +378,14 @@ def create_task(user_id, name, category="general", due_date=None, description=""
         # Get the created task
         cursor.execute("SELECT * FROM tasks WHERE id = ?", (task_id,))
         task = cursor.fetchone()
-        
+
         if task:
             logger.info(f"Task created: {name} (id: {task_id}, user: {user_id})")
             return dict(task)
         else:
             logger.error(f"Task creation failed for user {user_id}")
             return None
-            
+
     except Exception as e:
         logger.error(f"Failed to create task: {e}")
         if conn:
@@ -467,14 +475,14 @@ def update_task(user_id, task_id, **kwargs):
         # Get updated task
         cursor.execute("SELECT * FROM tasks WHERE id = ? AND user_id = ?", (task_id, user_id))
         task = cursor.fetchone()
-        
+
         if task:
             logger.info(f"Task updated: {task_id} (user: {user_id})")
             return dict(task)
         else:
             logger.error(f"Task not found after update: {task_id}")
             return None
-            
+
     except Exception as e:
         logger.error(f"Failed to update task {task_id}: {e}")
         if conn:
@@ -494,12 +502,12 @@ def delete_task(user_id, task_id):
         cursor.execute("DELETE FROM tasks WHERE id = ? AND user_id = ?", (task_id, user_id))
         deleted = cursor.rowcount > 0
         conn.commit()
-        
+
         if deleted:
             logger.info(f"Task deleted: {task_id} (user: {user_id})")
         else:
             logger.warning(f"Task not found for deletion: {task_id} (user: {user_id})")
-            
+
         return deleted
     except Exception as e:
         logger.error(f"Failed to delete task {task_id}: {e}")
@@ -621,7 +629,7 @@ def migrate_json_to_sqlite(json_file_path):
         conn.commit()
         print(f"Migrated {migrated_count} tasks to SQLite")
         return migrated_count > 0
-        
+
     except Exception as e:
         print(f"Migration failed: {e}")
         if conn:
