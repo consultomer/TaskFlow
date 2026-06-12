@@ -1,0 +1,23 @@
+[Unit]
+Description=TaskFlow - maloomatech.com
+After=network.target
+
+[Service]
+Type=notify
+User=www-data
+Group=www-data
+WorkingDirectory=/path/to/TaskFlow
+Environment="PATH=/path/to/TaskFlow/.venv/bin"
+ExecStart=/path/to/TaskFlow/.venv/bin/gunicorn \
+    --bind 0.0.0.0:5001 \
+    --workers 4 \
+    --timeout 120 \
+    --access-logfile - \
+    --error-logfile - \
+    --log-level info \
+    app:app
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

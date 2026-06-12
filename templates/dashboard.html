@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskFlow - Focus Dashboard</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- H1: Main page title (for accessibility) -->
+    <h1 class="sr-only">TaskFlow - Task Management Dashboard</h1>
+
+    <div class="dash">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="logo">
+                <i class="ti ti-layout-kanban" aria-hidden="true"></i> TaskFlow
+            </div>
+            
+            <div class="nav-section" id="navSection">
+                <p>Workspace</p>
+                <div class="nav-item active" onclick="filterTasks('all')">
+                    <i class="ti ti-home"></i> Dashboard
+                </div>
+                <div class="nav-item" onclick="filterTasks('all')">
+                    <i class="ti ti-list-check"></i> All Tasks
+                </div>
+                <div class="nav-item" onclick="filterTasks('active')">
+                    <i class="ti ti-clock"></i> Active
+                </div>
+                <div class="nav-item" onclick="filterTasks('completed')">
+                    <i class="ti ti-circle-check"></i> Completed
+                </div>
+            </div>
+            
+            <div class="nav-section" id="categorySection">
+                <p>Categories</p>
+                <div class="nav-item" onclick="filterByCategory('design')">
+                    <i class="ti ti-palette"></i> Design
+                </div>
+                <div class="nav-item" onclick="filterByCategory('dev')">
+                    <i class="ti ti-code"></i> Development
+                </div>
+                <div class="nav-item" onclick="filterByCategory('review')">
+                    <i class="ti ti-file-text"></i> Review
+                </div>
+                <div class="nav-item" onclick="filterByCategory('bug')">
+                    <i class="ti ti-bug"></i> Bugs
+                </div>
+            </div>
+            
+            <!-- Active Timer Card -->
+            <div class="timer-card" id="timerCard">
+                <div class="tc-label">
+                    <i class="ti ti-clock" style="font-size:13px;vertical-align:-1px"></i> Active Timer
+                </div>
+                <div class="tc-task" id="timerTask">No active task</div>
+                <div class="tc-time" id="timerDisplay">00:00:00</div>
+                <div class="tc-controls">
+                    <button class="tc-btn play" id="pauseBtn" onclick="toggleTimer()" disabled>
+                        <i class="ti ti-player-pause" style="font-size:13px"></i> Pause
+                    </button>
+                    <button class="tc-btn stop" id="stopBtn" onclick="stopTimer()" disabled>
+                        <i class="ti ti-square" style="font-size:13px"></i> Stop
+                    </button>
+                </div>
+            </div>
+            
+            <!-- User Profile (bottom of sidebar) -->
+            <div class="user-profile">
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <i class="ti ti-user"></i>
+                    </div>
+                    <div class="user-details">
+                        <div class="user-name">{{ username }}</div>
+                        <div class="user-status">Online{% if session.get('is_admin') %} • Admin{% endif %}</div>
+                    </div>
+                </div>
+                <form action="{{ url_for('auth.logout') }}" method="POST" style="margin: 0;">
+                    <button type="submit" class="logout-btn" title="Logout" style="background: none; border: none; cursor: pointer; color: inherit; padding: 0;">
+                        <i class="ti ti-logout"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Mobile Menu Button -->
+        <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileMenu()">
+            <i class="ti ti-menu-2"></i>
+        </button>
+
+        <!-- Mobile Overlay -->
+        <div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileMenu()"></div>
+
+        <!-- Top Bar -->
+        <div class="topbar">
+            <div class="topbar-left">
+                <!-- H2: Section heading -->
+                <h2 id="greeting">Good morning, {{ username }}</h2>
+                <span id="dateInfo">Loading...</span>
+            </div>
+            <div class="topbar-right">
+                <button class="btn-new" onclick="showNewTaskModal()">
+                    <i class="ti ti-plus"></i> New Task
+                </button>
+                <!-- Mobile logout button -->
+                <form action="{{ url_for('auth.logout') }}" method="POST" style="display: inline;">
+                    <button type="submit" class="mobile-logout-btn" title="Logout" style="background: none; border: none; cursor: pointer; color: inherit; padding: 0;">
+                        <i class="ti ti-logout"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main">
+            <!-- Stats Row -->
+            <div class="stats-row">
+                <div class="stat">
+                    <div class="s-label">Total Tasks</div>
+                    <div class="s-val" id="statTotal">0</div>
+                    <div class="s-sub">
+                        <span class="s-dot" style="background:#534AB7"></span>
+                        <span id="statInProgress">0</span> in progress
+                    </div>
+                </div>
+                <div class="stat">
+                    <div class="s-label">Completed Today</div>
+                    <div class="s-val" id="statCompleted">0</div>
+                    <div class="s-sub">
+                        <span class="s-dot" style="background:#0F6E56"></span>
+                        Stay focused!
+                    </div>
+                </div>
+                <div class="stat">
+                    <div class="s-label">Time Tracked</div>
+                    <div class="s-val" id="statTime">0h 0m</div>
+                    <div class="s-sub">
+                        <span class="s-dot" style="background:#BA7517"></span>
+                        Keep going!
+                    </div>
+                </div>
+                <div class="stat">
+                    <div class="s-label">Overdue</div>
+                    <div class="s-val" id="statOverdue">0</div>
+                    <div class="s-sub">
+                        <span class="s-dot" style="background:#A32D2D"></span>
+                        <span id="overdueText">All on track</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sections -->
+            <div class="sections">
+                <!-- Task List Column -->
+                <div class="col">
+                    <div class="panel">
+                        <div class="panel-hd">
+                            <h2>Tasks</h2>
+                            <span id="taskCount">0 tasks</span>
+                        </div>
+                        
+                        <div class="filter-row">
+                            <div class="filter-pill active" onclick="setFilter('all', this)">All</div>
+                            <div class="filter-pill" onclick="setFilter('active', this)">Active</div>
+                            <div class="filter-pill" onclick="setFilter('completed', this)">Completed</div>
+                        </div>
+                        
+                        <div id="taskList">
+                            <!-- Tasks will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="col">
+                    <!-- Admin Panel (only for admins) -->
+                    {% if session.get('is_admin') %}
+                    <div class="panel">
+                        <div class="panel-hd">
+                            <h2><i class="ti ti-shield-check" style="color:#534AB7"></i> Admin Panel</h2>
+                            <button class="btn-secondary" onclick="showCreateUserModal()" style="font-size: 12px; padding: 5px 10px;">
+                                <i class="ti ti-plus"></i> Add User
+                            </button>
+                        </div>
+                        <div id="adminUserList">
+                            <!-- Users will be loaded here -->
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Quick Stats Panel -->
+                    <div class="panel">
+                        <div class="panel-hd">
+                            <h2>Focus Tips</h2>
+                        </div>
+                        <div class="tip-list">
+                            <div class="tip-item">
+                                <i class="ti ti-lightbulb" style="color:#534AB7"></i>
+                                <span>Start with the most important task</span>
+                            </div>
+                            <div class="tip-item">
+                                <i class="ti ti-clock" style="color:#1D9E75"></i>
+                                <span>Use the timer to stay accountable</span>
+                            </div>
+                            <div class="tip-item">
+                                <i class="ti ti-check" style="color:#BA7517"></i>
+                                <span>Complete small tasks to build momentum</span>
+                            </div>
+                            <div class="tip-item">
+                                <i class="ti ti-device-mobile" style="color:#A32D2D"></i>
+                                <span>Minimize distractions during focus time</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="panel">
+                        <div class="panel-hd">
+                            <h2>Recent Activity</h2>
+                        </div>
+                        <div id="activityFeed">
+                            <div class="activity-item">
+                                <div class="act-icon" style="background:#EEEDFE">
+                                    <i class="ti ti-info-circle" style="color:#534AB7"></i>
+                                </div>
+                                <div>
+                                    <div class="act-text">Welcome to TaskFlow! Create your first task to get started.</div>
+                                    <div class="act-time">Just now</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Task Modal -->
+    <div id="newTaskModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create New Task</h3>
+                <button class="modal-close" onclick="closeModal('newTaskModal')">&times;</button>
+            </div>
+            <form id="newTaskForm" onsubmit="createTask(event)">
+                <div class="form-group">
+                    <label for="taskName">Task Name *</label>
+                    <input type="text" id="taskName" placeholder="What needs to be done?" autocomplete="off">
+                    <span class="form-error" id="taskNameError">Task name is required</span>
+                </div>
+                <div class="form-group">
+                    <label for="taskDescription">Description</label>
+                    <input type="text" id="taskDescription" placeholder="Add details about this task..." autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="taskCategory">Category</label>
+                    <select id="taskCategory">
+                        <option value="general">General</option>
+                        <option value="design">Design</option>
+                        <option value="dev">Development</option>
+                        <option value="review">Review</option>
+                        <option value="bug">Bug Fix</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="taskDueDate">Due Date (optional)</label>
+                    <input type="date" id="taskDueDate" autocomplete="off">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeModal('newTaskModal')">Cancel</button>
+                    <button type="submit" class="btn-primary">Create Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Task Modal -->
+    <div id="editTaskModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Task</h3>
+                <button class="modal-close" onclick="closeModal('editTaskModal')">&times;</button>
+            </div>
+            <form id="editTaskForm" onsubmit="saveEditTask(event)">
+                <input type="hidden" id="editTaskId">
+                <div class="form-group">
+                    <label for="editTaskName">Task Name *</label>
+                    <input type="text" id="editTaskName" placeholder="Enter task name" autocomplete="off">
+                    <span class="form-error" id="editTaskNameError">Task name is required</span>
+                </div>
+                <div class="form-group">
+                    <label for="editTaskDescription">Description</label>
+                    <input type="text" id="editTaskDescription" placeholder="Add details about this task..." autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="editTaskCategory">Category</label>
+                    <select id="editTaskCategory">
+                        <option value="general">General</option>
+                        <option value="design">Design</option>
+                        <option value="dev">Development</option>
+                        <option value="review">Review</option>
+                        <option value="bug">Bug Fix</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editTaskDueDate">Due Date (optional)</label>
+                    <input type="date" id="editTaskDueDate" autocomplete="off">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeModal('editTaskModal')">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteTaskModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Delete Task</h3>
+                <button class="modal-close" onclick="closeModal('deleteTaskModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <b id="deleteTaskName"></b>?</p>
+                <p class="text-muted">This action cannot be undone.</p>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" onclick="closeModal('deleteTaskModal')">Cancel</button>
+                <button type="button" class="btn-primary btn-danger" onclick="confirmDeleteTask()">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create User Modal (Admin) -->
+    <div id="createUserModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create New User</h3>
+                <button class="modal-close" onclick="closeModal('createUserModal')">&times;</button>
+            </div>
+            <form id="createUserForm" onsubmit="createUser(event)">
+                <div class="form-group">
+                    <label for="newUsername">Username *</label>
+                    <input type="text" id="newUsername" placeholder="Enter username" minlength="3" autocomplete="username">
+                    <span class="form-error" id="newUsernameError">Username is required</span>
+                </div>
+                <div class="form-group">
+                    <label for="newPassword">Password *</label>
+                    <input type="password" id="newPassword" placeholder="Enter password" minlength="6" autocomplete="new-password">
+                    <span class="form-error" id="newPasswordError">Password must be at least 6 characters</span>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="newIsAdmin">
+                        Make this user an admin
+                    </label>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeModal('createUserModal')">Cancel</button>
+                    <button type="submit" class="btn-primary">Create User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit User Modal (Admin) -->
+    <div id="editUserModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit User</h3>
+                <button class="modal-close" onclick="closeModal('editUserModal')">&times;</button>
+            </div>
+            <form id="editUserForm" onsubmit="updateUser(event)">
+                <input type="hidden" id="editUserId">
+                <div class="form-group">
+                    <label for="editUsername">Username *</label>
+                    <input type="text" id="editUsername" placeholder="Enter username" minlength="3" autocomplete="username">
+                    <span class="form-error" id="editUsernameError">Username is required</span>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="editIsAdmin">
+                        Admin privileges
+                    </label>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeModal('editUserModal')">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Change Password Modal (Admin) -->
+    <div id="changePasswordModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Change Password</h3>
+                <button class="modal-close" onclick="closeModal('changePasswordModal')">&times;</button>
+            </div>
+            <form id="changePasswordForm" onsubmit="changeUserPassword(event)">
+                <input type="hidden" id="changePasswordUserId">
+                <p class="text-muted" style="margin-bottom: 15px;">Changing password for: <b id="changePasswordUsername"></b></p>
+                <div class="form-group">
+                    <label for="newUserPassword">New Password *</label>
+                    <input type="password" id="newUserPassword" placeholder="Enter new password" minlength="6" autocomplete="new-password">
+                    <span class="form-error" id="newUserPasswordError">Password must be at least 6 characters</span>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeModal('changePasswordModal')">Cancel</button>
+                    <button type="submit" class="btn-primary">Change Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete User Confirmation Modal (Admin) -->
+    <div id="deleteUserModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Delete User</h3>
+                <button class="modal-close" onclick="closeModal('deleteUserModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <b id="deleteUsername"></b>?</p>
+                <p class="text-muted">This will also delete all their tasks. This action cannot be undone.</p>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" onclick="closeModal('deleteUserModal')">Cancel</button>
+                <button type="button" class="btn-primary btn-danger" onclick="confirmDeleteUser()">Delete User</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Pass server-side data to JavaScript
+        window.isAdmin = {{ 'true' if session.get('is_admin') else 'false' }};
+        window.currentUserId = {{ session.get('user_id', 0) }};
+    </script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

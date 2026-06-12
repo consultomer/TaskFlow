@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logout Warning - TaskFlow</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+    <style>
+        .warning-icon {
+            font-size: 48px;
+            color: #BA7517;
+        }
+    </style>
+</head>
+<body class="auth-page">
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="auth-logo">
+                    <i class="ti ti-layout-kanban"></i>
+                    <h1>TaskFlow</h1>
+                </div>
+                <p class="auth-subtitle">Logout Warning</p>
+            </div>
+            
+            <div class="auth-warning" style="text-align: center; padding: 20px;">
+                <i class="ti ti-alert-triangle warning-icon"></i>
+                <h3 style="margin: 15px 0 10px; color: #333;">You have an active timer!</h3>
+                <p style="color: #666; margin-bottom: 5px;">Task: <strong>{{ timer_task }}</strong></p>
+                <p style="color: #666; margin-bottom: 20px;">Status: <span style="color: {{ '#534AB7' if timer_status == 'running' else '#BA7517' }}">{{ timer_status|upper }}</span></p>
+                <p style="color: #999; font-size: 14px; margin-bottom: 25px;">If you log out now, your timer will be stopped and progress may be lost.</p>
+                
+                <div style="display: flex; gap: 10px; justify-content: center;">
+                    <a href="{{ url_for('dashboard') }}" class="btn-secondary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 5px;">
+                        <i class="ti ti-arrow-left"></i>
+                        <span>Go Back</span>
+                    </a>
+                    <form method="POST" style="display: inline;">
+                        <button type="submit" class="btn-danger" style="display: inline-flex; align-items: center; gap: 5px; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; background: #A32D2D; color: white;">
+                            <i class="ti ti-logout"></i>
+                            <span>Force Logout</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

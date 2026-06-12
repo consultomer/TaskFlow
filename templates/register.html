@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - TaskFlow</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+</head>
+<body class="auth-page">
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="auth-logo">
+                    <i class="ti ti-layout-kanban"></i>
+                    <h1>TaskFlow</h1>
+                </div>
+                <p class="auth-subtitle">Create your account</p>
+            </div>
+            
+            {% if error %}
+            <div class="auth-error">
+                <i class="ti ti-alert-circle"></i>
+                <span>{{ error }}</span>
+            </div>
+            {% endif %}
+            
+            <form method="POST" class="auth-form" id="registerForm">
+                {% if reg_token_set %}
+                <div class="form-group">
+                    <label for="token">
+                        <i class="ti ti-key"></i>
+                        Registration Token
+                    </label>
+                    <input type="password" id="token" name="token" required 
+                           placeholder="Enter registration token" autocomplete="off">
+                    <span class="form-hint">Contact admin for the registration token</span>
+                </div>
+                {% endif %}
+                
+                <div class="form-group">
+                    <label for="username">
+                        <i class="ti ti-user"></i>
+                        Username
+                    </label>
+                    <input type="text" id="username" name="username" required 
+                           placeholder="Choose a username" minlength="3" autocomplete="username">
+                    <span class="form-hint">At least 3 characters</span>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">
+                        <i class="ti ti-lock"></i>
+                        Password
+                    </label>
+                    <input type="password" id="password" name="password" required 
+                           placeholder="Create a password" minlength="6" autocomplete="new-password">
+                    <span class="form-hint">At least 6 characters</span>
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirm_password">
+                        <i class="ti ti-lock"></i>
+                        Confirm Password
+                    </label>
+                    <input type="password" id="confirm_password" name="confirm_password" required 
+                           placeholder="Confirm your password" autocomplete="new-password">
+                </div>
+                
+                <button type="submit" class="btn-primary auth-btn" id="registerBtn">
+                    <i class="ti ti-user-plus"></i>
+                    <span>Create Account</span>
+                </button>
+            </form>
+            
+            <div class="auth-footer">
+                <p>Already have an account? <a href="{{ url_for('auth.login') }}">Sign in</a></p>
+            </div>
+        </div>
+        
+        <div class="auth-info">
+            <h2>Welcome to TaskFlow</h2>
+            <p>Your personal task management and time tracking dashboard.</p>
+            <ul class="auth-features">
+                <li><i class="ti ti-check"></i> Track your tasks efficiently</li>
+                <li><i class="ti ti-clock"></i> Built-in focus timer</li>
+                <li><i class="ti ti-chart-bars"></i> Visual productivity stats</li>
+                <li><i class="ti ti-shield-check"></i> Secure & private</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        // Validate register form before submit
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm_password').value;
+            
+            if (password !== confirmPassword) {
+                e.preventDefault();
+                alert('Passwords do not match!');
+                document.getElementById('confirm_password').focus();
+                return false;
+            }
+            return true;
+        });
+    </script>
+</body>
+</html>

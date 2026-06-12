@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+.venv/
+uv.lock
+
+# Database files (use volume instead)
+*.db
+*.db-shm
+*.db-wal
+tasks.json
+
+# Environment files (use Docker secrets or volumes)
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+README.md
+
+# Docker files
+Dockerfile
+docker-compose.yml
+docker
+docker-compose.prod.yml
+.dockerignore

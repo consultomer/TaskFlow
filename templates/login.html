@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - TaskFlow</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+</head>
+<body class="auth-page">
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="auth-logo">
+                    <i class="ti ti-layout-kanban"></i>
+                    <h1>TaskFlow</h1>
+                </div>
+                <p class="auth-subtitle">Sign in to your account</p>
+            </div>
+            
+            {% if error %}
+            <div class="auth-error">
+                <i class="ti ti-alert-circle"></i>
+                <span>{{ error }}</span>
+            </div>
+            {% endif %}
+            
+            <!-- Login Form -->
+            <form method="POST" class="auth-form" id="loginForm">
+                <div class="form-group">
+                    <label for="username">
+                        <i class="ti ti-user"></i>
+                        Username
+                    </label>
+                    <input type="text" id="username" name="username" required 
+                           placeholder="Enter your username" autocomplete="username">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">
+                        <i class="ti ti-lock"></i>
+                        Password
+                    </label>
+                    <input type="password" id="password" name="password" required 
+                           placeholder="Enter your password" autocomplete="current-password">
+                </div>
+                
+                <button type="submit" class="btn-primary auth-btn" id="loginBtn">
+                    <i class="ti ti-login"></i>
+                    <span>Sign In</span>
+                </button>
+            </form>
+            
+            <div class="auth-footer">
+                <p>Don't have an account? <a href="{{ url_for('auth.register') }}">Sign up</a></p>
+            </div>
+        </div>
+        
+        <div class="auth-info">
+            <h2>Welcome to TaskFlow</h2>
+            <p>Your personal task management and time tracking dashboard.</p>
+            <ul class="auth-features">
+                <li><i class="ti ti-check"></i> Track your tasks efficiently</li>
+                <li><i class="ti ti-clock"></i> Built-in focus timer</li>
+                <li><i class="ti ti-chart-bars"></i> Visual productivity stats</li>
+                <li><i class="ti ti-shield-check"></i> Secure & private</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
