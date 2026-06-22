@@ -41,8 +41,6 @@ COPY utils/ utils/
 # Make startup script executable
 RUN chmod +x start_production.sh
 
-# Copy env file if available, otherwise create empty
-COPY .env .env
 
 # Create volume mount for database persistence
 VOLUME ["/app/data"]
