@@ -12,6 +12,7 @@ COPY . .
 # Create virtual environment and install dependencies
 RUN uv venv && \
     . .venv/bin/activate && \
+    uv pip install --upgrade "pip>=26.1" && \
     uv sync
 
 # ---- Runtime Stage ----
@@ -23,7 +24,8 @@ WORKDIR /app
 RUN apt-get update && \
     apt-get install -y --no-install-recommends curl && \
     rm -rf /var/lib/apt/lists/* && \
-    python -m venv /app/.venv
+    python -m pip install --no-cache-dir --upgrade "pip>=26.1" && \
+    python -m venv --upgrade-deps /app/.venv
 ENV PATH="/app/.venv/bin:$PATH"
 
 # Copy virtual environment from builder
