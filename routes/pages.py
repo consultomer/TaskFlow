@@ -9,7 +9,7 @@ pages_bp = Blueprint("pages", __name__)
 logger = logging.getLogger(__name__)
 
 
-@pages_bp.route("/")
+@pages_bp.route("/", methods=["GET"])
 @login_required
 def dashboard():
     """Main dashboard page"""
@@ -61,7 +61,7 @@ def dashboard():
     )
 
 
-@pages_bp.route("/favicon.ico")
+@pages_bp.route("/favicon.ico", methods=["GET"])
 def favicon():
     """Serve favicon or return 204 to prevent 404 errors"""
     return "", 204

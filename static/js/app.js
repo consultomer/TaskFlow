@@ -6,8 +6,8 @@ let timerInterval = null;
 let activeTaskId = null;
 let deleteTaskId = null;
 let mobileMenuOpen = false;
-let isAdmin = window.isAdmin || false;
-let currentUserId = window.currentUserId || 0;
+let isAdmin = globalThis.isAdmin || false;
+let currentUserId = globalThis.currentUserId || 0;
 let deleteUserId = null;
 let users = [];
 let hasValidationErrors = false; // Track validation state
@@ -46,7 +46,7 @@ async function apiFetch(url, options = {}) {
         // Check for 401 Unauthorized
         if (response.status === 401) {
             // Session expired, redirect to login
-            window.location.href = '/login';
+            globalThis.location.href = '/login';
             return null;
         }
 
@@ -123,7 +123,7 @@ function renderTasks() {
 
     taskList.innerHTML = filteredTasks.map(task => renderTaskItem(task)).join('');
 
-    document.getElementById('taskCount').textContent = `${filteredTasks.length} task${filteredTasks.length !== 1 ? 's' : ''}`;
+    document.getElementById('taskCount').textContent = `${filteredTasks.length} task${filteredTasks.length === 1 ? '' : 's'}`;
 
     // Update active timer
     const activeTask = tasks.find(t => t.timer_active);
@@ -281,7 +281,7 @@ function updateStats() {
     // Calculate total time including active timer
     let totalTime = tasks.reduce((sum, t) => sum + (t.total_time || 0), 0);
     const activeTask = tasks.find(t => t.timer_active);
-    if (activeTask && activeTask.timer_start) {
+    if (activeTask?.timer_start) {
         const start = new Date(activeTask.timer_start);
         const now = new Date();
         const diffSecs = Math.max(0, Math.floor((now - start) / 1000));
@@ -305,7 +305,7 @@ function startTimerUpdate() {
     if (timerInterval) clearInterval(timerInterval);
     timerInterval = setInterval(() => {
         const activeTask = tasks.find(t => t.timer_active);
-        if (activeTask && activeTask.timer_start) {
+        if (activeTask?.timer_start) {
             const start = new Date(activeTask.timer_start);
             const now = new Date();
             const diffSecs = Math.max(0, Math.floor((now - start) / 1000));
@@ -334,7 +334,7 @@ function updateTimerDisplay() {
 
     if (activeTask) {
         const start = new Date(activeTask.timer_start);
-        const elapsed = Math.floor((new Date() - start) / 1000) + (activeTask.accumulated_time || 0);
+        const elapsed = Math.floor((Date.now() - start) / 1000) + (activeTask.accumulated_time || 0);
         document.getElementById('timerDisplay').textContent = formatTime(elapsed);
     } else if (pausedTask) {
         document.getElementById('timerDisplay').textContent = formatTime(pausedTask.accumulated_time || 0);
@@ -465,7 +465,7 @@ async function createTask(event) {
 async function saveEditTask(event) {
     event.preventDefault();
 
-    const taskId = parseInt(document.getElementById('editTaskId').value);
+    const taskId = Number.parseInt(document.getElementById('editTaskId').value);
     const name = document.getElementById('editTaskName').value.trim();
     const description = document.getElementById('editTaskDescription').value.trim();
     const category = document.getElementById('editTaskCategory').value;
@@ -514,7 +514,7 @@ async function confirmDeleteTask() {
     try {
         const result = await apiFetch(`/api/tasks/${deleteTaskId}/delete`, { method: 'DELETE' });
 
-        if (result && result.success) {
+        if (result?.success) {
             // Reload tasks from server
             await loadTasks();
             closeModal('deleteTaskModal');
@@ -568,10 +568,10 @@ async function toggleTimer() {
 
     const activeTask = tasks.find(t => t.id === activeTaskId);
 
-    if (activeTask && activeTask.timer_active) {
+    if (activeTask?.timer_active) {
         // Pause
         await pauseTimer();
-    } else if (activeTask && activeTask.timer_paused) {
+    } else if (activeTask?.timer_paused) {
         // Resume
         await startTimer(activeTaskId);
     }
@@ -655,7 +655,7 @@ function filterByCategory(category) {
     // Highlight the selected category
     document.querySelectorAll('#categorySection .nav-item').forEach(item => {
         item.classList.remove('active');
-        if (item.onclick && item.onclick.toString().includes(`'${category}'`)) {
+        if (item.onclick?.toString().includes(`'${category}'`)) {
             item.classList.add('active');
         }
     });
@@ -747,7 +747,7 @@ function addActivity(action, taskName) {
 
     // Keep only last 5 activities
     while (feed.children.length > 5) {
-        feed.removeChild(feed.lastChild);
+        feed.lastChild.remove();
     }
 }
 
@@ -824,11 +824,11 @@ function renderUsers() {
                 <button onclick="showChangePasswordModal(${user.id})" style="background: none; border: none; cursor: pointer; color: #BA7517;" title="Change Password">
                     <i class="ti ti-key"></i>
                 </button>
-                ${user.id !== currentUserId ? `
+                ${user.id === currentUserId ? '' : `
                 <button onclick="showDeleteUserModal(${user.id})" style="background: none; border: none; cursor: pointer; color: #A32D2D;" title="Delete">
                     <i class="ti ti-trash"></i>
                 </button>
-                ` : ''}
+                `}
             </div>
         </div>
     `).join('');
@@ -905,7 +905,7 @@ function showEditUserModal(userId) {
 async function updateUser(event) {
     event.preventDefault();
 
-    const userId = parseInt(document.getElementById('editUserId').value);
+    const userId = Number.parseInt(document.getElementById('editUserId').value);
     const username = document.getElementById('editUsername').value.trim();
     const isAdmin = document.getElementById('editIsAdmin').checked;
 
@@ -955,7 +955,7 @@ function showChangePasswordModal(userId) {
 async function changeUserPassword(event) {
     event.preventDefault();
 
-    const userId = parseInt(document.getElementById('changePasswordUserId').value);
+    const userId = Number.parseInt(document.getElementById('changePasswordUserId').value);
     const password = document.getElementById('newUserPassword').value;
 
     // Validate
@@ -974,7 +974,7 @@ async function changeUserPassword(event) {
             body: JSON.stringify({ password })
         });
 
-        if (result && result.success) {
+        if (result?.success) {
             closeModal('changePasswordModal');
             document.getElementById('changePasswordForm').reset();
             alert('Password changed successfully!');
@@ -1004,7 +1004,7 @@ async function confirmDeleteUser() {
     try {
         const result = await apiFetch(`/api/users/${deleteUserId}`, { method: 'DELETE' });
 
-        if (result && result.success) {
+        if (result?.success) {
             await loadUsers();
             closeModal('deleteUserModal');
             alert('User deleted successfully!');

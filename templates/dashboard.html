@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TaskFlow - Focus Dashboard</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" integrity="sha384-HtMZLkYo+pR5/u7zCzXxMJP6QoNnQJt1qkHM0EaOPvGDIzaVZbmYr/TlvUZ/sKAg" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" integrity="sha384-mY6asDzXlnHeimHHXw8cavPeArhEcAfnCibDFiaDPex3Fudo+edh/hnT7siZz8bg" crossorigin="anonymous">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
@@ -22,34 +22,34 @@
             
             <div class="nav-section" id="navSection">
                 <p>Workspace</p>
-                <div class="nav-item active" onclick="filterTasks('all')">
+                <button type="button" class="nav-item active" onclick="filterTasks('all')">
                     <i class="ti ti-home"></i> Dashboard
-                </div>
-                <div class="nav-item" onclick="filterTasks('all')">
+                </button>
+                <button type="button" class="nav-item" onclick="filterTasks('all')">
                     <i class="ti ti-list-check"></i> All Tasks
-                </div>
-                <div class="nav-item" onclick="filterTasks('active')">
+                </button>
+                <button type="button" class="nav-item" onclick="filterTasks('active')">
                     <i class="ti ti-clock"></i> Active
-                </div>
-                <div class="nav-item" onclick="filterTasks('completed')">
+                </button>
+                <button type="button" class="nav-item" onclick="filterTasks('completed')">
                     <i class="ti ti-circle-check"></i> Completed
-                </div>
+                </button>
             </div>
             
             <div class="nav-section" id="categorySection">
                 <p>Categories</p>
-                <div class="nav-item" onclick="filterByCategory('design')">
+                <button type="button" class="nav-item" onclick="filterByCategory('design')">
                     <i class="ti ti-palette"></i> Design
-                </div>
-                <div class="nav-item" onclick="filterByCategory('dev')">
+                </button>
+                <button type="button" class="nav-item" onclick="filterByCategory('dev')">
                     <i class="ti ti-code"></i> Development
-                </div>
-                <div class="nav-item" onclick="filterByCategory('review')">
+                </button>
+                <button type="button" class="nav-item" onclick="filterByCategory('review')">
                     <i class="ti ti-file-text"></i> Review
-                </div>
-                <div class="nav-item" onclick="filterByCategory('bug')">
+                </button>
+                <button type="button" class="nav-item" onclick="filterByCategory('bug')">
                     <i class="ti ti-bug"></i> Bugs
-                </div>
+                </button>
             </div>
             
             <!-- Active Timer Card -->
@@ -94,7 +94,7 @@
         </button>
 
         <!-- Mobile Overlay -->
-        <div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileMenu()"></div>
+        <button type="button" class="mobile-overlay" id="mobileOverlay" aria-label="Close menu" onclick="closeMobileMenu()"></button>
 
         <!-- Top Bar -->
         <div class="topbar">
@@ -165,9 +165,9 @@
                         </div>
                         
                         <div class="filter-row">
-                            <div class="filter-pill active" onclick="setFilter('all', this)">All</div>
-                            <div class="filter-pill" onclick="setFilter('active', this)">Active</div>
-                            <div class="filter-pill" onclick="setFilter('completed', this)">Completed</div>
+                            <button type="button" class="filter-pill active" onclick="setFilter('all', this)">All</button>
+                            <button type="button" class="filter-pill" onclick="setFilter('active', this)">Active</button>
+                            <button type="button" class="filter-pill" onclick="setFilter('completed', this)">Completed</button>
                         </div>
                         
                         <div id="taskList">
