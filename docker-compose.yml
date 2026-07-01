@@ -9,7 +9,7 @@ services:
     ports:
       - "5001:5001"
     volumes:
-      - db_data:/app/data
+      - db_data:/app
     env_file:
       - .env
     restart: unless-stopped

@@ -19,13 +19,11 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Install curl for healthcheck
+# Install curl for healthcheck and create virtual environment
 RUN apt-get update && \
     apt-get install -y --no-install-recommends curl && \
-    rm -rf /var/lib/apt/lists/* \
+    rm -rf /var/lib/apt/lists/* && \
     python -m venv /app/.venv
-
-# Create virtual environment
 ENV PATH="/app/.venv/bin:$PATH"
 
 # Copy virtual environment from builder
