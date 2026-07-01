@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from flask import Blueprint, render_template, redirect, url_for, session
+from flask import Blueprint, render_template, session
 
 from routes.auth import login_required
 from utils.database import get_user_by_id, get_tasks_by_user, get_active_timer

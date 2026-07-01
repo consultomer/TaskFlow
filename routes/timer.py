@@ -1,12 +1,14 @@
 import logging
 from datetime import datetime
-from flask import Blueprint, jsonify, request, session
+from flask import Blueprint, jsonify, session
 
 from routes.auth import login_required
 from utils.database import get_task_by_id, get_active_timer, get_paused_timer, update_task
 
 timer_bp = Blueprint("timer", __name__)
 logger = logging.getLogger(__name__)
+
+DATABASE_ERROR = "Database error"
 
 
 @timer_bp.route("/api/tasks/<int:task_id>/timer/start", methods=["POST"])
@@ -53,9 +55,9 @@ def start_timer(task_id):
         logger.info(f"Timer started for task {task_id}")
         return jsonify(updated_task)
 
-    except Exception as e:
-        logger.error(f"Error starting timer: {str(e)}")
-        return jsonify({"error": "Database error"}), 500
+    except Exception:
+        logger.exception("Error starting timer")
+        return jsonify({"error": DATABASE_ERROR}), 500
 
 
 @timer_bp.route("/api/tasks/<int:task_id>/timer/pause", methods=["POST"])
@@ -88,9 +90,9 @@ def pause_timer(task_id):
         logger.info(f"Timer paused for task {task_id}, accumulated: {accumulated}s")
         return jsonify(updated_task)
 
-    except Exception as e:
-        logger.error(f"Error pausing timer: {str(e)}")
-        return jsonify({"error": "Database error"}), 500
+    except Exception:
+        logger.exception("Error pausing timer")
+        return jsonify({"error": DATABASE_ERROR}), 500
 
 
 @timer_bp.route("/api/tasks/<int:task_id>/timer/stop", methods=["POST"])
@@ -126,9 +128,9 @@ def stop_timer(task_id):
         logger.info(f"Timer stopped for task {task_id}, total: {accumulated}s")
         return jsonify(updated_task)
 
-    except Exception as e:
-        logger.error(f"Error stopping timer: {str(e)}")
-        return jsonify({"error": "Database error"}), 500
+    except Exception:
+        logger.exception("Error stopping timer")
+        return jsonify({"error": DATABASE_ERROR}), 500
 
 
 @timer_bp.route("/api/timer/current", methods=["GET"])

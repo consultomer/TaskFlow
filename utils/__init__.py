@@ -13,3 +13,19 @@ from .database import (
     get_paused_timer,
     migrate_json_to_sqlite,
 )
+
+__all__ = [
+    "get_db_connection",
+    "init_db",
+    "create_user",
+    "get_user_by_username",
+    "get_user_by_id",
+    "create_task",
+    "get_tasks_by_user",
+    "get_task_by_id",
+    "update_task",
+    "delete_task",
+    "get_active_timer",
+    "get_paused_timer",
+    "migrate_json_to_sqlite",
+]

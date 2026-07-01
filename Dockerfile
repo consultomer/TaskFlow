@@ -22,10 +22,10 @@ WORKDIR /app
 # Install curl for healthcheck
 RUN apt-get update && \
     apt-get install -y --no-install-recommends curl && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* \
+    python -m venv /app/.venv
 
 # Create virtual environment
-RUN python -m venv /app/.venv
 ENV PATH="/app/.venv/bin:$PATH"
 
 # Copy virtual environment from builder

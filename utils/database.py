@@ -1,7 +1,7 @@
 import sqlite3
 import os
+import json
 import logging
-from datetime import datetime
 from dotenv import load_dotenv
 
 # Configure logging
@@ -28,8 +28,8 @@ def get_db_connection():
         # foreign_keys must be enabled per connection
         conn.execute("PRAGMA foreign_keys = ON")
         return conn
-    except Exception as e:
-        logger.error(f"Failed to connect to database: {e}")
+    except Exception:
+        logger.exception("Failed to connect to database")
         raise
 
 
@@ -38,7 +38,7 @@ def init_admin_user():
     from werkzeug.security import generate_password_hash
 
     admin_username = os.getenv("ADMIN_USERNAME", "admin")
-    admin_password = os.getenv("ADMIN_PASSWORD", "admin123")
+    admin_password = os.getenv("ADMIN_PASSWORD")
 
     # Check if any admin user already exists
     conn = None
@@ -65,6 +65,12 @@ def init_admin_user():
             return {"id": existing_user["id"], "username": admin_username, "is_admin": True}
 
         # Create new admin user
+        if not admin_password:
+            # Default generated password is changeme
+            admin_password = "changeme"
+            logger.warning(
+                "ADMIN_PASSWORD not set in environment; using default password 'changeme'"
+            )
         password_hash = generate_password_hash(admin_password)
         cursor.execute(
             "INSERT INTO users (username, password_hash, is_admin) VALUES (?, ?, ?)",
@@ -75,8 +81,8 @@ def init_admin_user():
         logger.info(f"Default admin user created: {admin_username} (id: {admin_id})")
         return {"id": admin_id, "username": admin_username, "is_admin": True}
 
-    except Exception as e:
-        logger.error(f"Failed to initialize admin user: {e}")
+    except Exception:
+        logger.exception("Failed to initialize admin user")
         if conn:
             conn.rollback()
         return None
@@ -154,8 +160,8 @@ def init_db():
         conn.commit()
         logger.info("Database initialized successfully")
         conn.close()
-    except Exception as e:
-        logger.error(f"Failed to initialize database: {e}")
+    except Exception:
+        logger.exception("Failed to initialize database")
         raise
 
 
@@ -174,11 +180,11 @@ def create_user(username, password_hash, is_admin=False, registration_token=None
         user_id = cursor.lastrowid
         logger.info(f"User created: {username} (id: {user_id})")
         return {"id": user_id, "username": username, "is_admin": is_admin}
-    except sqlite3.IntegrityError as e:
+    except sqlite3.IntegrityError:
         logger.warning(f"Username already exists: {username}")
         return None
-    except Exception as e:
-        logger.error(f"Failed to create user {username}: {e}")
+    except Exception:
+        logger.exception(f"Failed to create user {username}")
         if conn:
             conn.rollback()
         return None
@@ -196,8 +202,8 @@ def get_user_by_username(username):
         cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
         user = cursor.fetchone()
         return dict(user) if user else None
-    except Exception as e:
-        logger.error(f"Failed to get user {username}: {e}")
+    except Exception:
+        logger.exception(f"Failed to get user {username}")
         return None
     finally:
         if conn:
@@ -215,8 +221,8 @@ def get_user_by_id(user_id):
         )
         user = cursor.fetchone()
         return dict(user) if user else None
-    except Exception as e:
-        logger.error(f"Failed to get user by id {user_id}: {e}")
+    except Exception:
+        logger.exception(f"Failed to get user by id {user_id}")
         return None
     finally:
         if conn:
@@ -234,8 +240,8 @@ def get_all_users():
         )
         users = cursor.fetchall()
         return [dict(user) for user in users]
-    except Exception as e:
-        logger.error(f"Failed to get all users: {e}")
+    except Exception:
+        logger.exception("Failed to get all users")
         return []
     finally:
         if conn:
@@ -281,8 +287,8 @@ def update_user(user_id, **kwargs):
             logger.error(f"User not found after update: {user_id}")
             return None
 
-    except Exception as e:
-        logger.error(f"Failed to update user {user_id}: {e}")
+    except Exception:
+        logger.exception(f"Failed to update user {user_id}")
         if conn:
             conn.rollback()
         return None
@@ -307,8 +313,8 @@ def delete_user(user_id):
             logger.warning(f"User not found for deletion: {user_id}")
 
         return deleted
-    except Exception as e:
-        logger.error(f"Failed to delete user {user_id}: {e}")
+    except Exception:
+        logger.exception(f"Failed to delete user {user_id}")
         if conn:
             conn.rollback()
         return False
@@ -334,8 +340,8 @@ def change_user_password(user_id, new_password_hash):
 
         logger.info(f"Password changed for user: {user_id}")
         return True
-    except Exception as e:
-        logger.error(f"Failed to change password for user {user_id}: {e}")
+    except Exception:
+        logger.exception(f"Failed to change password for user {user_id}")
         if conn:
             conn.rollback()
         return False
@@ -353,8 +359,8 @@ def get_user_with_password(user_id):
         cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
         user = cursor.fetchone()
         return dict(user) if user else None
-    except Exception as e:
-        logger.error(f"Failed to get user by id {user_id}: {e}")
+    except Exception:
+        logger.exception(f"Failed to get user by id {user_id}")
         return None
     finally:
         if conn:
@@ -390,8 +396,8 @@ def create_task(user_id, name, category="general", due_date=None, description=""
             logger.error(f"Task creation failed for user {user_id}")
             return None
 
-    except Exception as e:
-        logger.error(f"Failed to create task: {e}")
+    except Exception:
+        logger.exception("Failed to create task")
         if conn:
             conn.rollback()
         return None
@@ -411,8 +417,8 @@ def get_tasks_by_user(user_id):
         result = [dict(task) for task in tasks]
         logger.debug(f"Retrieved {len(result)} tasks for user {user_id}")
         return result
-    except Exception as e:
-        logger.error(f"Failed to get tasks for user {user_id}: {e}")
+    except Exception:
+        logger.exception(f"Failed to get tasks for user {user_id}")
         return []
     finally:
         if conn:
@@ -428,8 +434,8 @@ def get_task_by_id(user_id, task_id):
         cursor.execute("SELECT * FROM tasks WHERE id = ? AND user_id = ?", (task_id, user_id))
         task = cursor.fetchone()
         return dict(task) if task else None
-    except Exception as e:
-        logger.error(f"Failed to get task {task_id} for user {user_id}: {e}")
+    except Exception:
+        logger.exception(f"Failed to get task {task_id} for user {user_id}")
         return None
     finally:
         if conn:
@@ -487,8 +493,8 @@ def update_task(user_id, task_id, **kwargs):
             logger.error(f"Task not found after update: {task_id}")
             return None
 
-    except Exception as e:
-        logger.error(f"Failed to update task {task_id}: {e}")
+    except Exception:
+        logger.exception(f"Failed to update task {task_id}")
         if conn:
             conn.rollback()
         return None
@@ -513,8 +519,8 @@ def delete_task(user_id, task_id):
             logger.warning(f"Task not found for deletion: {task_id} (user: {user_id})")
 
         return deleted
-    except Exception as e:
-        logger.error(f"Failed to delete task {task_id}: {e}")
+    except Exception:
+        logger.exception(f"Failed to delete task {task_id}")
         if conn:
             conn.rollback()
         return False
@@ -532,8 +538,8 @@ def get_active_timer(user_id):
         cursor.execute("SELECT * FROM tasks WHERE user_id = ? AND timer_active = 1", (user_id,))
         task = cursor.fetchone()
         return dict(task) if task else None
-    except Exception as e:
-        logger.error(f"Failed to get active timer for user {user_id}: {e}")
+    except Exception:
+        logger.exception(f"Failed to get active timer for user {user_id}")
         return None
     finally:
         if conn:
@@ -549,96 +555,111 @@ def get_paused_timer(user_id):
         cursor.execute("SELECT * FROM tasks WHERE user_id = ? AND timer_paused = 1", (user_id,))
         task = cursor.fetchone()
         return dict(task) if task else None
-    except Exception as e:
-        logger.error(f"Failed to get paused timer for user {user_id}: {e}")
+    except Exception:
+        logger.exception(f"Failed to get paused timer for user {user_id}")
         return None
     finally:
         if conn:
             conn.close()
 
 
-def migrate_json_to_sqlite(json_file_path):
-    """Migrate data from tasks.json to SQLite (one-time use)"""
-    import json
-
+def _load_migration_tasks(json_file_path):
+    """Read tasks.json, returning the parsed list, or None if it can't be read."""
     if not os.path.exists(json_file_path):
         print(f"JSON file not found: {json_file_path}")
-        return False
+        return None
 
     try:
         with open(json_file_path, "r") as f:
-            tasks_data = json.load(f)
+            return json.load(f)
     except Exception as e:
         print(f"Failed to read JSON file: {e}")
+        return None
+
+
+def _ensure_migration_admin_user(cursor):
+    """Get or create the admin user that migrated tasks are assigned to."""
+    from werkzeug.security import generate_password_hash
+
+    cursor.execute("SELECT id FROM users WHERE username = ?", ("admin",))
+    admin = cursor.fetchone()
+
+    if admin:
+        # Ensure existing admin user is admin
+        cursor.execute("UPDATE users SET is_admin = 1 WHERE username = ?", ("admin",))
+        return admin["id"]
+
+    cursor.execute(
+        "INSERT INTO users (username, password_hash, is_admin) VALUES (?, ?, ?)",
+        ("admin", generate_password_hash("changeme"), 1),
+    )
+    print(f"Created default admin user: admin / {"changeme"}")
+    return cursor.lastrowid
+
+
+def _insert_migrated_task(cursor, admin_id, task):
+    """Insert a single legacy task row. Returns True on success."""
+    try:
+        cursor.execute(
+            """
+            INSERT INTO tasks (user_id, name, description, category, due_date, completed, completed_at,
+                              timer_active, timer_paused, timer_start, accumulated_time, total_time, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+            (
+                admin_id,
+                task.get("name", ""),
+                task.get("description", ""),
+                task.get("category", "general"),
+                task.get("due_date"),
+                1 if task.get("completed") else 0,
+                task.get("completed_at"),
+                1 if task.get("timer_active") else 0,
+                0,  # timer_paused (new field)
+                task.get("timer_start"),
+                task.get("accumulated_time", 0),
+                task.get("total_time", 0),
+                task.get("created_at"),
+            ),
+        )
+        return True
+    except Exception as e:
+        print(f"Error migrating task {task.get('id')}: {e}")
         return False
+
+
+def migrate_json_to_sqlite(json_file_path):
+    """Migrate data from tasks.json to SQLite (one-time use).
+
+    Returns the number of tasks migrated (0 if there was nothing to
+    migrate), or None if the migration could not be performed (missing
+    file, unreadable JSON, or a database error).
+    """
+    tasks_data = _load_migration_tasks(json_file_path)
+    if tasks_data is None:
+        return None
 
     if not tasks_data:
         print("No tasks to migrate")
-        return False
-
-    # Create a default admin user if not exists
-    from werkzeug.security import generate_password_hash
+        return 0
 
     conn = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Check if admin user exists
-        cursor.execute("SELECT id FROM users WHERE username = ?", ("admin",))
-        admin = cursor.fetchone()
-
-        if not admin:
-            cursor.execute(
-                "INSERT INTO users (username, password_hash, is_admin) VALUES (?, ?, ?)",
-                ("admin", generate_password_hash("changeme"), 1),
-            )
-            admin_id = cursor.lastrowid
-            print("Created default admin user: admin / changeme")
-        else:
-            admin_id = admin["id"]
-            # Ensure existing admin user is admin
-            cursor.execute("UPDATE users SET is_admin = 1 WHERE username = ?", ("admin",))
-
-        # Migrate tasks
-        migrated_count = 0
-        for task in tasks_data:
-            try:
-                cursor.execute(
-                    """
-                    INSERT INTO tasks (user_id, name, description, category, due_date, completed, completed_at,
-                                      timer_active, timer_paused, timer_start, accumulated_time, total_time, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                    (
-                        admin_id,
-                        task.get("name", ""),
-                        task.get("description", ""),
-                        task.get("category", "general"),
-                        task.get("due_date"),
-                        1 if task.get("completed") else 0,
-                        task.get("completed_at"),
-                        1 if task.get("timer_active") else 0,
-                        0,  # timer_paused (new field)
-                        task.get("timer_start"),
-                        task.get("accumulated_time", 0),
-                        task.get("total_time", 0),
-                        task.get("created_at"),
-                    ),
-                )
-                migrated_count += 1
-            except Exception as e:
-                print(f"Error migrating task {task.get('id')}: {e}")
+        admin_id = _ensure_migration_admin_user(cursor)
+        migrated_count = sum(_insert_migrated_task(cursor, admin_id, task) for task in tasks_data)
 
         conn.commit()
         print(f"Migrated {migrated_count} tasks to SQLite")
-        return migrated_count > 0
+        return migrated_count
 
     except Exception as e:
         print(f"Migration failed: {e}")
         if conn:
             conn.rollback()
-        return False
+        return None
     finally:
         if conn:
             conn.close()

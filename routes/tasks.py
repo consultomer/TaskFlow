@@ -9,12 +9,13 @@ from utils.database import (
     create_task,
     update_task,
     delete_task,
-    get_active_timer,
-    get_paused_timer,
 )
 
 tasks_bp = Blueprint("tasks", __name__)
 logger = logging.getLogger(__name__)
+
+DATABASE_ERROR = "Database error"
+TASK_NOT_FOUND_ERROR = "Task not found"
 
 
 @tasks_bp.route("/api/tasks", methods=["GET"])
@@ -69,9 +70,9 @@ def create_task_api():
             logger.error("Failed to create task")
             return jsonify({"error": "Failed to create task"}), 500
 
-    except Exception as e:
-        logger.error(f"Error creating task: {str(e)}")
-        return jsonify({"error": "Database error"}), 500
+    except Exception:
+        logger.exception("Error creating task")
+        return jsonify({"error": DATABASE_ERROR}), 500
 
 
 @tasks_bp.route("/api/tasks/<int:task_id>", methods=["PUT"])
@@ -86,7 +87,7 @@ def update_task_api(task_id):
     # Verify task belongs to user
     task = get_task_by_id(user_id, task_id)
     if not task:
-        return jsonify({"error": "Task not found"}), 404
+        return jsonify({"error": TASK_NOT_FOUND_ERROR}), 404
 
     # Validate name if provided
     if "name" in data:
@@ -100,11 +101,11 @@ def update_task_api(task_id):
             logger.info(f"Task {task_id} updated successfully")
             return jsonify(updated_task)
 
-        return jsonify({"error": "Task not found"}), 404
+        return jsonify({"error": TASK_NOT_FOUND_ERROR}), 404
 
-    except Exception as e:
-        logger.error(f"Error updating task: {str(e)}")
-        return jsonify({"error": "Database error"}), 500
+    except Exception:
+        logger.exception("Error updating task")
+        return jsonify({"error": DATABASE_ERROR}), 500
 
 
 @tasks_bp.route("/api/tasks/<int:task_id>/complete", methods=["POST"])
@@ -117,7 +118,7 @@ def toggle_complete(task_id):
 
     task = get_task_by_id(user_id, task_id)
     if not task:
-        return jsonify({"error": "Task not found"}), 404
+        return jsonify({"error": TASK_NOT_FOUND_ERROR}), 404
 
     try:
         new_completed = not task["completed"]
@@ -158,9 +159,9 @@ def toggle_complete(task_id):
         logger.info(f"Task {task_id} completion toggled to {new_completed}")
         return jsonify(updated_task)
 
-    except Exception as e:
-        logger.error(f"Error toggling task completion: {str(e)}")
-        return jsonify({"error": "Database error"}), 500
+    except Exception:
+        logger.exception("Error toggling task completion")
+        return jsonify({"error": DATABASE_ERROR}), 500
 
 
 @tasks_bp.route("/api/tasks/<int:task_id>/delete", methods=["DELETE"])
@@ -177,8 +178,8 @@ def delete_task_api(task_id):
             logger.info(f"Task {task_id} deleted successfully")
             return jsonify({"success": True})
 
-        return jsonify({"error": "Task not found"}), 404
+        return jsonify({"error": TASK_NOT_FOUND_ERROR}), 404
 
-    except Exception as e:
-        logger.error(f"Error deleting task: {str(e)}")
-        return jsonify({"error": "Database error"}), 500
+    except Exception:
+        logger.exception("Error deleting task")
+        return jsonify({"error": DATABASE_ERROR}), 500

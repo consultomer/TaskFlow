@@ -121,70 +121,7 @@ function renderTasks() {
         return;
     }
 
-    taskList.innerHTML = filteredTasks.map(task => {
-        const categoryClass = task.category || 'general';
-        const categoryLabel = getCategoryLabel(task.category);
-        const isCompleted = task.completed;
-        const isActive = task.timer_active;
-        const isPaused = task.timer_paused;
-
-        // Format time consistently as HH:MM:SS
-        let timeDisplay = '';
-        if (isCompleted) {
-            timeDisplay = `<i class="ti ti-clock"></i> ${formatTime(task.total_time || 0)}`;
-        } else if (isActive) {
-            // Don't set static time here, let startTimerUpdate handle it live
-            timeDisplay = `<i class="ti ti-player-play" style="color:#534AB7"></i> 00:00:00`;
-        } else if (isPaused) {
-            timeDisplay = `<i class="ti ti-player-pause" style="color:#BA7517"></i> ${formatTime(task.accumulated_time || 0)}`;
-        } else {
-            const totalMinutes = Math.floor((task.total_time || 0) / 60);
-            timeDisplay = totalMinutes > 0 ? `<i class="ti ti-clock"></i> ${formatTime(task.total_time || 0)}` : '';
-        }
-
-        // Check if overdue
-        let overdueClass = '';
-        if (!isCompleted && task.due_date) {
-            const dueDate = new Date(task.due_date);
-            if (dueDate < new Date()) {
-                overdueClass = ' style="color:#A32D2D"';
-                timeDisplay = `<i class="ti ti-alert-triangle" style="color:#A32D2D;font-size:13px"></i> Overdue`;
-            }
-        }
-
-        // Description display (truncate if too long)
-        let descriptionHtml = '';
-        if (task.description && task.description.trim()) {
-            const desc = task.description.trim();
-            const displayDesc = desc.length > 60 ? desc.substring(0, 60) + '...' : desc;
-            descriptionHtml = `<div class="t-desc">${escapeHtml(displayDesc)}</div>`;
-        }
-
-        return `
-            <div class="task-item" data-task-id="${task.id}">
-                <div class="chk ${isCompleted ? 'done' : ''}" onclick="toggleComplete(${task.id})">
-                    ${isCompleted ? '<i class="ti ti-check"></i>' : ''}
-                </div>
-                <div class="task-info">
-                    <div class="t-name ${isCompleted ? 'done' : ''}">${escapeHtml(task.name)}</div>
-                    ${descriptionHtml}
-                    <div class="t-meta">
-                        <span class="tag ${categoryClass}">${categoryLabel}</span>
-                        ${task.due_date ? `<span class="tag general">${formatDate(task.due_date)}</span>` : ''}
-                    </div>
-                </div>
-                ${!isCompleted ? `
-                    <div class="task-time${overdueClass}">${timeDisplay}</div>
-                    <div class="task-actions">
-                        ${!isActive && !isPaused ? `<i class="ti ti-player-play" onclick="startTimer(${task.id})" title="Start timer"></i>` : ''}
-                        ${isPaused ? `<i class="ti ti-player-play" onclick="resumeTimer(${task.id})" title="Resume timer"></i>` : ''}
-                        <i class="ti ti-edit" onclick="showEditModal(${task.id})" title="Edit"></i>
-                        <i class="ti ti-trash" onclick="showDeleteModal(${task.id})" title="Delete"></i>
-                    </div>
-                ` : ''}
-            </div>
-        `;
-    }).join('');
+    taskList.innerHTML = filteredTasks.map(task => renderTaskItem(task)).join('');
 
     document.getElementById('taskCount').textContent = `${filteredTasks.length} task${filteredTasks.length !== 1 ? 's' : ''}`;
 
@@ -211,6 +148,84 @@ function renderTasks() {
         document.getElementById('pauseBtn').innerHTML = '<i class="ti ti-player-pause" style="font-size:13px"></i> Pause';
         document.getElementById('stopBtn').disabled = true;
     }
+}
+
+// Determine the time badge text and overdue styling for a task
+function getTaskTimeInfo(task) {
+    let timeDisplay = '';
+    if (task.completed) {
+        timeDisplay = `<i class="ti ti-clock"></i> ${formatTime(task.total_time || 0)}`;
+    } else if (task.timer_active) {
+        // Don't set static time here, let startTimerUpdate handle it live
+        timeDisplay = `<i class="ti ti-player-play" style="color:#534AB7"></i> 00:00:00`;
+    } else if (task.timer_paused) {
+        timeDisplay = `<i class="ti ti-player-pause" style="color:#BA7517"></i> ${formatTime(task.accumulated_time || 0)}`;
+    } else {
+        const totalMinutes = Math.floor((task.total_time || 0) / 60);
+        timeDisplay = totalMinutes > 0 ? `<i class="ti ti-clock"></i> ${formatTime(task.total_time || 0)}` : '';
+    }
+
+    let overdueClass = '';
+    const isOverdue = !task.completed && task.due_date && new Date(task.due_date) < new Date();
+    if (isOverdue) {
+        overdueClass = ' style="color:#A32D2D"';
+        timeDisplay = `<i class="ti ti-alert-triangle" style="color:#A32D2D;font-size:13px"></i> Overdue`;
+    }
+
+    return { timeDisplay, overdueClass };
+}
+
+// Build the truncated description block for a task
+function getTaskDescriptionHtml(task) {
+    if (!task.description?.trim()) return '';
+    const desc = task.description.trim();
+    const displayDesc = desc.length > 60 ? desc.substring(0, 60) + '...' : desc;
+    return `<div class="t-desc">${escapeHtml(displayDesc)}</div>`;
+}
+
+// Build the timer action icons for a task
+function getTaskActionsHtml(task) {
+    const isActive = task.timer_active;
+    const isPaused = task.timer_paused;
+    let actionsHtml = '';
+    if (!isActive && !isPaused) {
+        actionsHtml += `<i class="ti ti-player-play" onclick="startTimer(${task.id})" title="Start timer"></i>`;
+    }
+    if (isPaused) {
+        actionsHtml += `<i class="ti ti-player-play" onclick="resumeTimer(${task.id})" title="Resume timer"></i>`;
+    }
+    actionsHtml += `<i class="ti ti-edit" onclick="showEditModal(${task.id})" title="Edit"></i>`;
+    actionsHtml += `<i class="ti ti-trash" onclick="showDeleteModal(${task.id})" title="Delete"></i>`;
+    return actionsHtml;
+}
+
+// Render a single task list item
+function renderTaskItem(task) {
+    const categoryClass = task.category || 'general';
+    const categoryLabel = getCategoryLabel(task.category);
+    const isCompleted = task.completed;
+    const { timeDisplay, overdueClass } = getTaskTimeInfo(task);
+    const descriptionHtml = getTaskDescriptionHtml(task);
+
+    return `
+        <div class="task-item" data-task-id="${task.id}">
+            <div class="chk ${isCompleted ? 'done' : ''}" onclick="toggleComplete(${task.id})">
+                ${isCompleted ? '<i class="ti ti-check"></i>' : ''}
+            </div>
+            <div class="task-info">
+                <div class="t-name ${isCompleted ? 'done' : ''}">${escapeHtml(task.name)}</div>
+                ${descriptionHtml}
+                <div class="t-meta">
+                    <span class="tag ${categoryClass}">${categoryLabel}</span>
+                    ${task.due_date ? `<span class="tag general">${formatDate(task.due_date)}</span>` : ''}
+                </div>
+            </div>
+            ${isCompleted ? '' : `
+                <div class="task-time${overdueClass}">${timeDisplay}</div>
+                <div class="task-actions">${getTaskActionsHtml(task)}</div>
+            `}
+        </div>
+    `;
 }
 
 // Get category label

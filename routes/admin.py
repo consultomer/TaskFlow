@@ -15,6 +15,8 @@ from werkzeug.security import generate_password_hash
 admin_bp = Blueprint("admin", __name__)
 logger = logging.getLogger(__name__)
 
+USER_NOT_FOUND_ERROR = "User not found"
+
 
 @admin_bp.route("/api/users", methods=["GET"])
 @admin_required
@@ -40,7 +42,7 @@ def update_user_api(user_id):
         logger.info(f"Admin {session['username']} updated user {user_id}")
         return jsonify(updated_user)
 
-    return jsonify({"error": "User not found"}), 404
+    return jsonify({"error": USER_NOT_FOUND_ERROR}), 404
 
 
 @admin_bp.route("/api/users/<int:user_id>", methods=["DELETE"])
@@ -56,7 +58,7 @@ def delete_user_api(user_id):
         logger.info(f"Admin {session['username']} deleted user {user_id}")
         return jsonify({"success": True})
 
-    return jsonify({"error": "User not found"}), 404
+    return jsonify({"error": USER_NOT_FOUND_ERROR}), 404
 
 
 @admin_bp.route("/api/users/<int:user_id>/password", methods=["PUT"])
@@ -76,7 +78,7 @@ def change_password_api(user_id):
         logger.info(f"Admin {session['username']} changed password for user {user_id}")
         return jsonify({"success": True})
 
-    return jsonify({"error": "User not found"}), 404
+    return jsonify({"error": USER_NOT_FOUND_ERROR}), 404
 
 
 @admin_bp.route("/api/admin/users", methods=["POST"])

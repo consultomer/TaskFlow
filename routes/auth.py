@@ -1,6 +1,5 @@
 import os
 import logging
-from datetime import datetime
 from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify, abort
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -15,6 +14,11 @@ from utils.database import (
 auth_bp = Blueprint("auth", __name__)
 logger = logging.getLogger(__name__)
 
+API_PREFIX = "/api/"
+AUTH_LOGIN_ENDPOINT = "auth.login"
+LOGIN_TEMPLATE = "login.html"
+REGISTER_TEMPLATE = "register.html"
+
 
 def login_required(f):
     """Decorator to require login for a route"""
@@ -23,9 +27,9 @@ def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if "user_id" not in session:
-            if request.path.startswith("/api/"):
+            if request.path.startswith(API_PREFIX):
                 return jsonify({"error": "Authentication required"}), 401
-            return redirect(url_for("auth.login"))
+            return redirect(url_for(AUTH_LOGIN_ENDPOINT))
         return f(*args, **kwargs)
 
     return decorated_function
@@ -38,14 +42,14 @@ def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if "user_id" not in session:
-            if request.path.startswith("/api/"):
+            if request.path.startswith(API_PREFIX):
                 return jsonify({"error": "Authentication required"}), 401
-            return redirect(url_for("auth.login"))
+            return redirect(url_for(AUTH_LOGIN_ENDPOINT))
 
         # Check if user is admin
         user = get_user_by_id(session["user_id"])
         if not user or not user.get("is_admin"):
-            if request.path.startswith("/api/"):
+            if request.path.startswith(API_PREFIX):
                 return jsonify({"error": "Admin privileges required"}), 403
             abort(403)
 
@@ -69,7 +73,7 @@ def login():
         password = request.form.get("password", "")
 
         if not username or not password:
-            return render_template("login.html", error="Username and password are required")
+            return render_template(LOGIN_TEMPLATE, error="Username and password are required")
 
         user = get_user_by_username(username)
 
@@ -80,9 +84,26 @@ def login():
             logger.info(f"User logged in: {username}")
             return redirect(url_for("pages.dashboard"))
 
-        return render_template("login.html", error="Invalid username or password")
+        return render_template(LOGIN_TEMPLATE, error="Invalid username or password")
 
-    return render_template("login.html")
+    return render_template(LOGIN_TEMPLATE)
+
+
+def _render_register(reg_token, error=None):
+    return render_template(REGISTER_TEMPLATE, error=error, reg_token_set=bool(reg_token))
+
+
+def _validate_registration_input(username, password, confirm_password):
+    """Validate registration fields; returns an error message, or None if valid."""
+    if not username or not password:
+        return "Username and password are required"
+    if len(username) < 3:
+        return "Username must be at least 3 characters"
+    if len(password) < 6:
+        return "Password must be at least 6 characters"
+    if password != confirm_password:
+        return "Passwords do not match"
+    return None
 
 
 @auth_bp.route("/register", methods=["GET", "POST"])
@@ -91,69 +112,39 @@ def register():
     """Registration page with token authentication"""
     reg_token = os.getenv("REGISTRATION_TOKEN", "")
 
-    if request.method == "POST":
-        token = request.form.get("token", "")
-        username = request.form.get("username", "").strip()
-        password = request.form.get("password", "")
-        confirm_password = request.form.get("confirm_password", "")
+    if request.method != "POST":
+        return _render_register(reg_token)
 
-        # If registration token is set, validate it
-        if reg_token and token != reg_token:
-            return render_template(
-                "register.html", error="Invalid registration token", reg_token_set=True
-            )
+    token = request.form.get("token", "")
+    username = request.form.get("username", "").strip()
+    password = request.form.get("password", "")
+    confirm_password = request.form.get("confirm_password", "")
 
-        # Validation
-        if not username or not password:
-            return render_template(
-                "register.html",
-                error="Username and password are required",
-                reg_token_set=bool(reg_token),
-            )
+    # If registration token is set, validate it
+    if reg_token and token != reg_token:
+        return _render_register(reg_token, "Invalid registration token")
 
-        if len(username) < 3:
-            return render_template(
-                "register.html",
-                error="Username must be at least 3 characters",
-                reg_token_set=bool(reg_token),
-            )
+    error = _validate_registration_input(username, password, confirm_password)
+    if error:
+        return _render_register(reg_token, error)
 
-        if len(password) < 6:
-            return render_template(
-                "register.html",
-                error="Password must be at least 6 characters",
-                reg_token_set=bool(reg_token),
-            )
+    # Check if username exists
+    if get_user_by_username(username):
+        return _render_register(reg_token, "Username already exists")
 
-        if password != confirm_password:
-            return render_template(
-                "register.html", error="Passwords do not match", reg_token_set=bool(reg_token)
-            )
+    # Create user
+    password_hash = generate_password_hash(password)
+    user = create_user(username, password_hash)
 
-        # Check if username exists
-        existing_user = get_user_by_username(username)
-        if existing_user:
-            return render_template(
-                "register.html", error="Username already exists", reg_token_set=bool(reg_token)
-            )
+    if not user:
+        return _render_register(reg_token, "Registration failed")
 
-        # Create user
-        password_hash = generate_password_hash(password)
-        user = create_user(username, password_hash)
-
-        if user:
-            logger.info(f"New user registered: {username}")
-            # Auto-login after registration
-            session["user_id"] = user["id"]
-            session["username"] = username
-            session["is_admin"] = False
-            return redirect(url_for("pages.dashboard"))
-
-        return render_template(
-            "register.html", error="Registration failed", reg_token_set=bool(reg_token)
-        )
-
-    return render_template("register.html", reg_token_set=bool(reg_token))
+    logger.info(f"New user registered: {username}")
+    # Auto-login after registration
+    session["user_id"] = user["id"]
+    session["username"] = username
+    session["is_admin"] = False
+    return redirect(url_for("pages.dashboard"))
 
 
 @auth_bp.route("/logout", methods=["GET", "POST"])
@@ -168,13 +159,18 @@ def logout():
             # Force logout on POST (confirmed)
             session.clear()
             logger.info(f"User logged out (forced): {username}")
-            return redirect(url_for("auth.login"))
+            return redirect(url_for(AUTH_LOGIN_ENDPOINT))
         else:
             # GET request - warn user
             active = get_active_timer(user_id)
             paused = get_paused_timer(user_id)
 
-            timer_task = active["name"] if active else paused["name"] if paused else None
+            if active:
+                timer_task = active["name"]
+            elif paused:
+                timer_task = paused["name"]
+            else:
+                timer_task = None
             timer_status = "running" if active else "paused"
 
             return render_template(
@@ -184,4 +180,4 @@ def logout():
     # No active timer, proceed with logout
     session.clear()
     logger.info(f"User logged out: {username}")
-    return redirect(url_for("auth.login"))
+    return redirect(url_for(AUTH_LOGIN_ENDPOINT))

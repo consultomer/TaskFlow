@@ -3,6 +3,9 @@ import logging
 from flask import Flask
 from dotenv import load_dotenv
 
+from utils.database import init_db, init_admin_user, DATABASE_PATH, migrate_json_to_sqlite
+from routes import auth_bp, pages_bp, tasks_bp, timer_bp, user_bp, admin_bp
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -18,12 +21,7 @@ DOMAIN = os.getenv("DOMAIN", "")
 if DOMAIN:
     app.config["SERVER_NAME"] = DOMAIN
 
-# Import database utilities
-from utils.database import init_db, init_admin_user, DATABASE_PATH, migrate_json_to_sqlite
-
 # Register Blueprints
-from routes import auth_bp, pages_bp, tasks_bp, timer_bp, user_bp, admin_bp
-
 app.register_blueprint(auth_bp)
 app.register_blueprint(pages_bp)
 app.register_blueprint(tasks_bp)
@@ -63,6 +61,6 @@ if __name__ == "__main__":
     if domain:
         print(f"🌐 Domain: {domain}")
     print(f"📁 Database: {DATABASE_PATH}")
-    print(f"👤 Default user: admin / changeme")
+    print("👤 Default user: admin / changeme")
 
     app.run(host=host, port=port, debug=debug)
