@@ -2,6 +2,7 @@ import sqlite3
 import os
 import json
 import logging
+from datetime import datetime, timezone
 from dotenv import load_dotenv
 
 # Configure logging
@@ -17,6 +18,29 @@ DATABASE_PATH = os.path.join(
 )
 
 logger.info(f"Database path configured: {DATABASE_PATH}")
+
+
+def utc_now():
+    """Current time as a timezone-aware UTC datetime.
+
+    Timer timestamps must be timezone-aware so the browser (which parses
+    them with `new Date(...)`) interprets them as absolute UTC instants
+    instead of guessing the server's local timezone.
+    """
+    return datetime.now(timezone.utc)
+
+
+def parse_timer_start(value):
+    """Parse a stored timer_start timestamp, assuming UTC.
+
+    Rows written before timer_start became timezone-aware are naive
+    (no offset); treat those as UTC too so elapsed time is still computed
+    consistently against `utc_now()`.
+    """
+    dt = datetime.fromisoformat(value)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt
 
 
 def get_db_connection():

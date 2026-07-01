@@ -12,6 +12,8 @@ from .database import (
     get_active_timer,
     get_paused_timer,
     migrate_json_to_sqlite,
+    utc_now,
+    parse_timer_start,
 )
 
 __all__ = [
@@ -28,4 +30,6 @@ __all__ = [
     "get_active_timer",
     "get_paused_timer",
     "migrate_json_to_sqlite",
+    "utc_now",
+    "parse_timer_start",
 ]

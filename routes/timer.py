@@ -1,9 +1,15 @@
 import logging
-from datetime import datetime
 from flask import Blueprint, jsonify, session
 
 from routes.auth import login_required
-from utils.database import get_task_by_id, get_active_timer, get_paused_timer, update_task
+from utils.database import (
+    get_task_by_id,
+    get_active_timer,
+    get_paused_timer,
+    update_task,
+    utc_now,
+    parse_timer_start,
+)
 
 timer_bp = Blueprint("timer", __name__)
 logger = logging.getLogger(__name__)
@@ -28,8 +34,8 @@ def start_timer(task_id):
         # Stop any active timer for this user
         active = get_active_timer(user_id)
         if active and active["id"] != task_id:
-            start = datetime.fromisoformat(active["timer_start"])
-            elapsed = int((datetime.now() - start).total_seconds())
+            start = parse_timer_start(active["timer_start"])
+            elapsed = int((utc_now() - start).total_seconds())
             accumulated = active["accumulated_time"] + elapsed
 
             update_task(
@@ -47,7 +53,7 @@ def start_timer(task_id):
             update_task(user_id, paused["id"], timer_paused=False)
 
         # Start timer for target task
-        timer_start = datetime.now().isoformat()
+        timer_start = utc_now().isoformat()
         updated_task = update_task(
             user_id, task_id, timer_active=True, timer_paused=False, timer_start=timer_start
         )
@@ -73,8 +79,8 @@ def pause_timer(task_id):
         return jsonify({"error": "Task not found or timer not active"}), 404
 
     try:
-        start = datetime.fromisoformat(task["timer_start"])
-        elapsed = int((datetime.now() - start).total_seconds())
+        start = parse_timer_start(task["timer_start"])
+        elapsed = int((utc_now() - start).total_seconds())
         accumulated = task["accumulated_time"] + elapsed
 
         updated_task = update_task(
@@ -109,8 +115,8 @@ def stop_timer(task_id):
 
     try:
         if task["timer_active"]:
-            start = datetime.fromisoformat(task["timer_start"])
-            elapsed = int((datetime.now() - start).total_seconds())
+            start = parse_timer_start(task["timer_start"])
+            elapsed = int((utc_now() - start).total_seconds())
             accumulated = task["accumulated_time"] + elapsed
         else:
             accumulated = task["accumulated_time"]
@@ -141,8 +147,8 @@ def get_current_timer():
 
     active = get_active_timer(user_id)
     if active:
-        start = datetime.fromisoformat(active["timer_start"])
-        elapsed = int((datetime.now() - start).total_seconds()) + active["accumulated_time"]
+        start = parse_timer_start(active["timer_start"])
+        elapsed = int((utc_now() - start).total_seconds()) + active["accumulated_time"]
         return jsonify(
             {
                 "task_id": active["id"],

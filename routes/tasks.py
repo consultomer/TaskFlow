@@ -9,6 +9,8 @@ from utils.database import (
     create_task,
     update_task,
     delete_task,
+    utc_now,
+    parse_timer_start,
 )
 
 tasks_bp = Blueprint("tasks", __name__)
@@ -28,8 +30,8 @@ def get_tasks():
     # Calculate current elapsed time for active timer
     for task in tasks:
         if task["timer_active"] and task["timer_start"]:
-            start = datetime.fromisoformat(task["timer_start"])
-            elapsed = int((datetime.now() - start).total_seconds()) + task["accumulated_time"]
+            start = parse_timer_start(task["timer_start"])
+            elapsed = int((utc_now() - start).total_seconds()) + task["accumulated_time"]
             task["current_elapsed"] = elapsed
         elif task["timer_paused"]:
             task["current_elapsed"] = task["accumulated_time"]
@@ -129,8 +131,8 @@ def toggle_complete(task_id):
 
             # Stop timer if running or paused
             if task["timer_active"]:
-                start = datetime.fromisoformat(task["timer_start"])
-                elapsed = int((datetime.now() - start).total_seconds())
+                start = parse_timer_start(task["timer_start"])
+                elapsed = int((utc_now() - start).total_seconds())
                 accumulated = task["accumulated_time"] + elapsed
                 total = accumulated
 
