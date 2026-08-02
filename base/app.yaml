@@ -1,0 +1,163 @@
+# Helm values for TaskFlow
+# Usage: helm install taskflow ./taskflow-helm -f taskflow-helm-values.yaml
+
+replicaCount: 2
+
+image:
+  repository: consultomer/taskflow
+  pullPolicy: IfNotPresent
+  tag: "latest"  # Specify exact version for production
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# Service Account
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# Pod annotations
+podAnnotations: {}
+
+# Pod security context
+podSecurityContext:
+  runAsNonRoot: false
+  fsGroup: 1000
+
+# Container security context
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: false
+  runAsNonRoot: false
+  runAsUser: 1000
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 5001
+  targetPort: 5001
+  annotations: {}
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    - host: taskflow.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: taskflow-tls
+      hosts:
+        - taskflow.example.com
+
+# Resources
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+# Autoscaling
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+# Node selection
+nodeSelector: {}
+
+# Node affinity
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - taskflow
+          topologyKey: kubernetes.io/hostname
+
+# Tolerations
+tolerations: []
+
+# Persistence
+persistence:
+  enabled: true
+  storageClassName: standard
+  accessMode: ReadWriteOnce
+  size: 10Gi
+  mountPath: /app/data
+  subPath: ""
+  existingClaim: ""
+  annotations: {}
+
+# Environment variables from ConfigMap
+env:
+  FLASK_ENV: "production"
+  FLASK_DEBUG: "0"
+  HOST: "0.0.0.0"
+  PORT: "5001"
+  DOMAIN: "taskflow.example.com"
+  DATABASE_PATH: "/app/data/tasks.db"
+
+# Secrets (use sealed-secrets or external-secrets in production)
+secrets:
+  SECRET_KEY: "your-super-secret-key-change-this-please"
+  ADMIN_USERNAME: "admin"
+  ADMIN_PASSWORD: "change-this-secure-password"
+  REGISTRATION_TOKEN: "your-secure-registration-token"
+
+# Liveness probe
+livenessProbe:
+  httpGet:
+    path: /
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+# Readiness probe
+readinessProbe:
+  httpGet:
+    path: /
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 2
+
+# Pod disruption budget
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+# Backup and restore
+backup:
+  enabled: false
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  retention: 30  # days
+
+# Monitoring
+monitoring:
+  enabled: false
+  serviceMonitor:
+    enabled: false
+    interval: 30s
