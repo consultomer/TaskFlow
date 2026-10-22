@@ -1,5 +1,7 @@
 import os
+import hashlib
 import logging
+from functools import lru_cache
 from flask import Flask
 from dotenv import load_dotenv
 
@@ -15,6 +17,24 @@ load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "fallback-secret-key-change-in-production")
+
+
+@lru_cache(maxsize=256)
+def _static_version(path, _mtime):
+    # _mtime is only part of the cache key, so an edited file gets a new hash
+    with open(path, "rb") as f:
+        return hashlib.md5(f.read(), usedforsecurity=False).hexdigest()[:10]
+
+
+@app.url_defaults
+def static_cache_busting(endpoint, values):
+    """Add ?v=<content hash> to static URLs so browsers fetch new JS/CSS after a deploy."""
+    if endpoint != "static" or "filename" not in values:
+        return
+    path = os.path.join(app.static_folder, values["filename"])
+    if os.path.isfile(path):
+        values["v"] = _static_version(path, os.path.getmtime(path))
+
 
 # Domain configuration for production
 DOMAIN = os.getenv("DOMAIN", "")
