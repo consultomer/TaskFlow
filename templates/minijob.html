@@ -75,6 +75,17 @@
             </div>
         </section>
 
+        <section class="mj-quick">
+            <form class="mj-quick-form" id="quickForm" autocomplete="off">
+                <i class="ti ti-bolt" aria-hidden="true"></i>
+                <input id="quickInput" type="text" aria-label="Quick add shift"
+                    placeholder="Quick add: 5.10 10-18 30 12   ·   today 17-23   ·   7 off">
+                <span class="mj-quick-preview" id="quickPreview"></span>
+                <button type="submit" class="mj-btn mj-btn-primary">Add</button>
+            </form>
+            <button type="button" class="mj-btn" id="openPaste"><i class="ti ti-clipboard-text"></i> Paste month</button>
+        </section>
+
         <section class="mj-main">
             <div class="mj-table-wrap">
                 <table class="mj-table" id="daysTable">
@@ -137,6 +148,33 @@
                 <p class="mj-help">Click a month to open it. The annual limit is the sum of each month's limit.</p>
             </section>
         </div>
+
+        <dialog class="mj-dialog" id="pasteDialog" aria-labelledby="pasteTitle">
+            <form method="dialog" class="mj-dialog-body" id="pasteForm">
+                <div class="mj-dialog-head">
+                    <h2 id="pasteTitle">Paste shifts</h2>
+                    <button type="button" class="mj-dialog-close" id="closePaste" aria-label="Close"><i class="ti ti-x"></i></button>
+                </div>
+                <p class="mj-help">
+                    One day per line: <code>date start end break tips</code>. Copy columns from Excel or Google Sheets, or type them.
+                    Dates like <code>5.10</code>, <code>05.10.2026</code>, <code>2026-10-05</code> or just <code>5</code> (this month).
+                    Times can be <code>10-18</code> or two columns. Lines without a date (headers) are skipped. Tips and notes you leave out stay as they are.
+                </p>
+                <textarea id="pasteInput" rows="8" spellcheck="false"
+                    placeholder="5.10&#9;10:00&#9;18:00&#9;0:30&#9;12&#10;6.10 off&#10;9.10 17-23 no 8,50"></textarea>
+                <div class="mj-paste-preview">
+                    <table class="mj-table">
+                        <thead><tr><th>Date</th><th>Start</th><th>End</th><th>Break</th><th>Net</th><th>Tips</th><th></th></tr></thead>
+                        <tbody id="pastePreview"></tbody>
+                    </table>
+                </div>
+                <div class="mj-dialog-foot">
+                    <span class="mj-paste-summary" id="pasteSummary"></span>
+                    <button type="button" class="mj-btn" id="cancelPaste">Cancel</button>
+                    <button type="button" class="mj-btn mj-btn-primary" id="importPaste" disabled>Import</button>
+                </div>
+            </form>
+        </dialog>
 
         <div class="mj-toast" id="toast" role="status" aria-live="polite"></div>
     </div>

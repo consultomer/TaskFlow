@@ -577,6 +577,207 @@ tr:hover .status-btn.empty {
     background: var(--danger-fill);
 }
 
+/* Fast entry: quick add + paste */
+.mj-quick {
+    display: flex;
+    gap: 10px;
+    padding: 0 20px 14px;
+    align-items: center;
+}
+
+.mj-quick-form {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--kpi-bg);
+    border: 0.5px solid var(--border-strong);
+    border-radius: 8px;
+    padding: 4px 4px 4px 10px;
+    min-width: 0;
+}
+
+.mj-quick-form:focus-within {
+    border-color: var(--primary);
+}
+
+.mj-quick-form > i {
+    color: var(--primary);
+    font-size: 16px;
+}
+
+.mj-quick-form input {
+    flex: 1;
+    min-width: 120px;
+    border: none;
+    background: transparent;
+    font: inherit;
+    color: var(--text);
+    padding: 5px 0;
+}
+
+.mj-quick-form input:focus {
+    outline: none;
+}
+
+.mj-quick-form input::placeholder {
+    color: var(--text-subtle);
+}
+
+.mj-quick-preview {
+    color: var(--text-muted);
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 45%;
+}
+
+.mj-quick-preview.error {
+    color: var(--danger);
+}
+
+.mj-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 30px;
+    padding: 0 12px;
+    border-radius: 8px;
+    border: 0.5px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.mj-btn:hover {
+    background: var(--primary-soft);
+    color: var(--primary-dark);
+}
+
+.mj-btn-primary {
+    background: var(--primary-fill);
+    border-color: var(--primary-fill);
+    color: #fff;
+}
+
+.mj-btn-primary:hover {
+    background: var(--primary-fill-hover);
+    color: #fff;
+}
+
+.mj-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Paste dialog */
+.mj-dialog {
+    margin: auto;
+    border: 0.5px solid var(--border);
+    border-radius: 12px;
+    padding: 0;
+    width: min(720px, calc(100vw - 32px));
+    max-height: calc(100vh - 64px);
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: 0 20px 60px var(--shadow);
+}
+
+.mj-dialog::backdrop {
+    background: var(--overlay);
+}
+
+.mj-dialog-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 18px 20px;
+    max-height: calc(100vh - 64px);
+}
+
+.mj-dialog-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.mj-dialog-head h2 {
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.mj-dialog-close {
+    border: none;
+    background: none;
+    color: var(--text-muted);
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.mj-dialog .mj-help {
+    margin-top: 0;
+}
+
+.mj-dialog textarea {
+    width: 100%;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 12px;
+    background: var(--kpi-bg);
+    color: var(--text);
+    border: 0.5px solid var(--border-strong);
+    border-radius: 8px;
+    padding: 8px 10px;
+    resize: vertical;
+    tab-size: 12;
+}
+
+.mj-dialog textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.mj-paste-preview {
+    overflow: auto;
+    min-height: 60px;
+    max-height: 260px;
+    border: 0.5px solid var(--border);
+    border-radius: 8px;
+}
+
+.mj-paste-preview thead th {
+    position: sticky;
+    top: 0;
+}
+
+.mj-paste-preview tr.invalid-row td {
+    background: var(--danger-soft);
+}
+
+.mj-paste-preview .paste-error {
+    color: var(--danger);
+    text-align: left;
+}
+
+.mj-paste-preview .paste-flag {
+    color: var(--warning);
+    font-size: 11px;
+}
+
+.mj-dialog-foot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mj-paste-summary {
+    flex: 1;
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
 /* Year view */
 .mj-year-top {
     padding: 18px 20px 6px;
@@ -643,6 +844,16 @@ tr:hover .status-btn.empty {
 
     .mj {
         border-radius: 0;
+    }
+
+    .mj-quick {
+        flex-wrap: wrap;
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    .mj-quick-preview {
+        display: none;
     }
 
     .mj-header,
