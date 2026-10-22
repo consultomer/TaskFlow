@@ -157,9 +157,9 @@ function getTaskTimeInfo(task) {
         timeDisplay = `<i class="ti ti-clock"></i> ${formatTime(task.total_time || 0)}`;
     } else if (task.timer_active) {
         // Don't set static time here, let startTimerUpdate handle it live
-        timeDisplay = `<i class="ti ti-player-play" style="color:#534AB7"></i> 00:00:00`;
+        timeDisplay = `<i class="ti ti-player-play" style="color:var(--accent)"></i> 00:00:00`;
     } else if (task.timer_paused) {
-        timeDisplay = `<i class="ti ti-player-pause" style="color:#BA7517"></i> ${formatTime(task.accumulated_time || 0)}`;
+        timeDisplay = `<i class="ti ti-player-pause" style="color:var(--warning)"></i> ${formatTime(task.accumulated_time || 0)}`;
     } else {
         const totalMinutes = Math.floor((task.total_time || 0) / 60);
         timeDisplay = totalMinutes > 0 ? `<i class="ti ti-clock"></i> ${formatTime(task.total_time || 0)}` : '';
@@ -168,8 +168,8 @@ function getTaskTimeInfo(task) {
     let overdueClass = '';
     const isOverdue = !task.completed && task.due_date && new Date(task.due_date) < new Date();
     if (isOverdue) {
-        overdueClass = ' style="color:#A32D2D"';
-        timeDisplay = `<i class="ti ti-alert-triangle" style="color:#A32D2D;font-size:13px"></i> Overdue`;
+        overdueClass = ' style="color:var(--danger)"';
+        timeDisplay = `<i class="ti ti-alert-triangle" style="color:var(--danger);font-size:13px"></i> Overdue`;
     }
 
     return { timeDisplay, overdueClass };
@@ -318,7 +318,7 @@ function startTimerUpdate() {
             // Update task list timer
             const taskEl = document.querySelector(`[data-task-id="${activeTask.id}"] .task-time`);
             if (taskEl) {
-                taskEl.innerHTML = `<i class="ti ti-player-play" style="color:#534AB7"></i> ${formatTime(elapsed)}`;
+                taskEl.innerHTML = `<i class="ti ti-player-play" style="color:var(--accent)"></i> ${formatTime(elapsed)}`;
             }
 
             // Update time tracked stat
@@ -708,15 +708,15 @@ function addActivity(action, taskName) {
     const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 
     const icons = {
-        'created': { icon: 'ti ti-circle-plus', color: '#0F6E56', bg: '#E1F5EE' },
-        'completed': { icon: 'ti ti-check', color: '#534AB7', bg: '#EEEDFE' },
-        'reopened': { icon: 'ti ti-arrow-back', color: '#BA7517', bg: '#FAEEDA' },
-        'deleted': { icon: 'ti ti-trash', color: '#A32D2D', bg: '#FCEBEB' },
-        'started': { icon: 'ti ti-clock', color: '#534AB7', bg: '#EEEDFE' },
-        'stopped': { icon: 'ti ti-square', color: '#534AB7', bg: '#EEEDFE' },
-        'paused': { icon: 'ti ti-player-pause', color: '#BA7517', bg: '#FAEEDA' },
-        'updated': { icon: 'ti ti-edit', color: '#BA7517', bg: '#FAEEDA' },
-        'renamed': { icon: 'ti ti-edit', color: '#BA7517', bg: '#FAEEDA' }
+        'created': { icon: 'ti ti-circle-plus', color: 'var(--success)', bg: 'var(--success-soft)' },
+        'completed': { icon: 'ti ti-check', color: 'var(--accent)', bg: 'var(--accent-soft)' },
+        'reopened': { icon: 'ti ti-arrow-back', color: 'var(--warning)', bg: 'var(--warning-soft)' },
+        'deleted': { icon: 'ti ti-trash', color: 'var(--danger)', bg: 'var(--danger-soft)' },
+        'started': { icon: 'ti ti-clock', color: 'var(--accent)', bg: 'var(--accent-soft)' },
+        'stopped': { icon: 'ti ti-square', color: 'var(--accent)', bg: 'var(--accent-soft)' },
+        'paused': { icon: 'ti ti-player-pause', color: 'var(--warning)', bg: 'var(--warning-soft)' },
+        'updated': { icon: 'ti ti-edit', color: 'var(--warning)', bg: 'var(--warning-soft)' },
+        'renamed': { icon: 'ti ti-edit', color: 'var(--warning)', bg: 'var(--warning-soft)' }
     };
 
     let iconKey = 'created';
@@ -809,23 +809,23 @@ function renderUsers() {
     }
 
     userList.innerHTML = users.map(user => `
-        <div class="user-item" style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee;">
+        <div class="user-item" style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid var(--color-border-tertiary);">
             <div>
                 <div style="font-weight: 500;">${escapeHtml(user.username)}</div>
-                <div style="font-size: 12px; color: #666;">
-                    ${user.is_admin ? '<span style="background: #EEEDFE; color: #534AB7; padding: 2px 6px; border-radius: 4px; font-size: 11px;">Admin</span>' : '<span style="color: #999;">User</span>'}
+                <div style="font-size: 12px; color: var(--color-text-secondary);">
+                    ${user.is_admin ? '<span style="background: var(--accent-soft); color: var(--accent); padding: 2px 6px; border-radius: 4px; font-size: 11px;">Admin</span>' : '<span style="color: var(--color-text-tertiary);">User</span>'}
                     ${user.id === currentUserId ? ' • You' : ''}
                 </div>
             </div>
             <div style="display: flex; gap: 5px;">
-                <button onclick="showEditUserModal(${user.id})" style="background: none; border: none; cursor: pointer; color: #534AB7;" title="Edit">
+                <button onclick="showEditUserModal(${user.id})" style="background: none; border: none; cursor: pointer; color: var(--accent);" title="Edit">
                     <i class="ti ti-edit"></i>
                 </button>
-                <button onclick="showChangePasswordModal(${user.id})" style="background: none; border: none; cursor: pointer; color: #BA7517;" title="Change Password">
+                <button onclick="showChangePasswordModal(${user.id})" style="background: none; border: none; cursor: pointer; color: var(--warning);" title="Change Password">
                     <i class="ti ti-key"></i>
                 </button>
                 ${user.id === currentUserId ? '' : `
-                <button onclick="showDeleteUserModal(${user.id})" style="background: none; border: none; cursor: pointer; color: #A32D2D;" title="Delete">
+                <button onclick="showDeleteUserModal(${user.id})" style="background: none; border: none; cursor: pointer; color: var(--danger);" title="Delete">
                     <i class="ti ti-trash"></i>
                 </button>
                 `}

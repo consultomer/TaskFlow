@@ -350,3 +350,56 @@ def build_month_summary(user_id, year, month, today=None):
         "days": rows,
         "weeks": week_list,
     }
+
+
+# ---------- year summary ----------
+
+
+def build_year_summary(user_id, year, today=None):
+    """Per-month totals for a whole year, plus the year's grand totals."""
+    today = today or date.today()
+    months = []
+    for month in range(1, 13):
+        summary = build_month_summary(user_id, year, month, today)
+        t = summary["totals"]
+        limit = summary["settings"]["monthly_limit"]
+        months.append(
+            {
+                "month": summary["month"],
+                "label": date(year, month, 1).strftime("%b"),
+                "worked_minutes": t["worked_minutes"],
+                "earned": t["earned"],
+                "tips": t["tips"],
+                "in_pocket": t["in_pocket"],
+                "shifts": t["shifts"],
+                "monthly_limit": limit,
+                "limit_pct": t["limit_pct"],
+                "over_limit": t["earned"] > limit,
+                "is_current": year == today.year and month == today.month,
+                "is_future": date(year, month, 1) > today,
+            }
+        )
+
+    worked = sum(m["worked_minutes"] for m in months)
+    earned = round(sum(m["earned"] for m in months), 2)
+    tips = round(sum(m["tips"] for m in months), 2)
+    annual_limit = round(sum(m["monthly_limit"] for m in months), 2)
+    active = [m for m in months if m["shifts"]]
+
+    return {
+        "year": year,
+        "months": months,
+        "totals": {
+            "worked_minutes": worked,
+            "earned": earned,
+            "tips": tips,
+            "in_pocket": round(earned + tips, 2),
+            "shifts": sum(m["shifts"] for m in months),
+            "annual_limit": annual_limit,
+            "left_to_limit": round(annual_limit - earned, 2),
+            "limit_pct": earned / annual_limit * 100 if annual_limit else 0,
+            "months_over_limit": sum(1 for m in months if m["over_limit"]),
+            "avg_month_earned": round(earned / len(active), 2) if active else 0,
+            "effective_wage": round((earned + tips) / (worked / 60), 2) if worked else 0,
+        },
+    }

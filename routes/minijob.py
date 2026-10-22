@@ -5,6 +5,7 @@ from flask import Blueprint, jsonify, render_template, request, session
 from routes.auth import login_required
 from utils.minijob import (
     build_month_summary,
+    build_year_summary,
     parse_duration,
     parse_month,
     save_settings,
@@ -25,9 +26,22 @@ def minijob_page():
     month = request.args.get("month") or date.today().strftime("%Y-%m")
     if not parse_month(month):
         month = date.today().strftime("%Y-%m")
+    view = "year" if request.args.get("view") == "year" else "month"
     return render_template(
-        "minijob.html", month=month, username=session.get("username", "User")
+        "minijob.html",
+        month=month,
+        view=view,
+        today_month=date.today().strftime("%Y-%m"),
+        username=session.get("username", "User"),
     )
+
+
+@minijob_bp.route("/api/minijob/year/<int:year>", methods=["GET"])
+@login_required
+def get_year(year):
+    if not 2000 <= year <= 2100:
+        return jsonify({"error": "Invalid year"}), 400
+    return jsonify(build_year_summary(session["user_id"], year))
 
 
 @minijob_bp.route("/api/minijob/<month>", methods=["GET"])

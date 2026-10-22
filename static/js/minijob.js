@@ -347,8 +347,113 @@ function shiftMonth(delta) {
 
 document.getElementById('prevMonth').addEventListener('click', () => shiftMonth(-1));
 document.getElementById('nextMonth').addEventListener('click', () => shiftMonth(1));
+document.getElementById('thisMonth').addEventListener('click', () => goToMonth(app.dataset.todayMonth));
 document.getElementById('monthPicker').addEventListener('change', e => {
     if (e.target.value) goToMonth(e.target.value);
 });
 
-loadMonth(currentMonth);
+// ---------- year view ----------
+
+let currentYear = Number(currentMonth.slice(0, 4));
+
+async function loadYear(year) {
+    try {
+        const data = await api(`/api/minijob/year/${year}`);
+        if (data) renderYear(data);
+    } catch (err) {
+        toast(err.message, true);
+    }
+}
+
+function renderYear(data) {
+    const t = data.totals;
+    document.getElementById('yearLabel').textContent = data.year;
+    document.getElementById('subtitle').textContent =
+        `${data.year} · ${t.shifts} shifts · Annual limit ${t.annual_limit.toFixed(0)} €`;
+
+    document.getElementById('yKpiWorked').textContent = fmtDuration(t.worked_minutes);
+    document.getElementById('yKpiEarned').textContent = fmtEuro(t.earned);
+    document.getElementById('yKpiLeft').textContent = fmtEuro(t.left_to_limit);
+    document.getElementById('yKpiAvg').textContent = fmtEuro(t.avg_month_earned);
+    document.getElementById('yKpiTips').textContent = fmtEuro(t.tips);
+    document.getElementById('yKpiPocket').textContent = fmtEuro(t.in_pocket);
+    const over = t.left_to_limit < 0;
+    document.getElementById('yKpiLeft').parentElement.classList.toggle('over', over);
+
+    const fill = document.getElementById('yProgressFill');
+    fill.style.width = `${Math.min(t.limit_pct, 100)}%`;
+    fill.classList.toggle('over', over);
+    document.getElementById('yProgressLabel').textContent = `${Math.round(t.limit_pct)}% of annual limit`;
+    document.getElementById('yProgressMeta').textContent =
+        `Months over limit: ${t.months_over_limit}  ·  Effective: ${t.effective_wage.toFixed(2)} €/h incl. tips`;
+
+    const maxEarned = Math.max(1, ...data.months.map(m => Math.max(m.earned, m.monthly_limit)));
+    document.getElementById('yearBody').innerHTML = data.months.map(m => {
+        const width = Math.round((m.earned / maxEarned) * 160);
+        const classes = [m.is_current ? 'today' : '', m.is_future ? 'future' : '', m.over_limit ? 'over' : ''].join(' ');
+        return `
+        <tr class="${classes}" data-month="${m.month}" title="Open ${m.label}">
+            <td class="month-name">${m.label}</td>
+            <td>${m.shifts || ''}</td>
+            <td>${m.worked_minutes ? fmtDuration(m.worked_minutes) : ''}</td>
+            <td class="earned">${m.earned ? fmtEuro(m.earned) : ''}</td>
+            <td class="pct">${m.earned ? `${Math.round(m.limit_pct)}%` : ''}</td>
+            <td class="week-tips">${m.tips ? fmtEuro(m.tips) : ''}</td>
+            <td class="net">${m.in_pocket ? fmtEuro(m.in_pocket) : ''}</td>
+            <td class="bar">${m.earned ? `<span class="bar-fill" style="width:${width}px"></span>` : ''}</td>
+        </tr>`;
+    }).join('');
+
+    document.getElementById('yearTotalRow').innerHTML = `
+        <td>YEAR TOTAL</td>
+        <td>${t.shifts}</td>
+        <td>${fmtDuration(t.worked_minutes)}</td>
+        <td>${fmtEuro(t.earned)}</td>
+        <td>${Math.round(t.limit_pct)}%</td>
+        <td>${fmtEuro(t.tips)}</td>
+        <td>${fmtEuro(t.in_pocket)}</td>
+        <td></td>`;
+}
+
+function goToYear(year) {
+    currentYear = year;
+    // Keep the open month in the URL so switching back to Month returns to it
+    const month = currentMonth.startsWith(`${year}-`) ? currentMonth : `${year}-01`;
+    history.replaceState(null, '', `?view=year&month=${month}`);
+    loadYear(year);
+}
+
+document.getElementById('prevYear').addEventListener('click', () => goToYear(currentYear - 1));
+document.getElementById('nextYear').addEventListener('click', () => goToYear(currentYear + 1));
+document.getElementById('thisYear').addEventListener('click', () => goToYear(Number(app.dataset.todayMonth.slice(0, 4))));
+document.getElementById('yearBody').addEventListener('click', e => {
+    const tr = e.target.closest('tr[data-month]');
+    if (tr) setView('month', tr.dataset.month);
+});
+
+// ---------- view switching ----------
+
+function setView(view, month) {
+    const isYear = view === 'year';
+    document.getElementById('monthView').hidden = isYear;
+    document.getElementById('monthNav').hidden = isYear;
+    document.getElementById('yearView').hidden = !isYear;
+    document.getElementById('yearNav').hidden = !isYear;
+    document.querySelectorAll('.mj-tabs button').forEach(btn => {
+        const active = btn.dataset.view === view;
+        btn.classList.toggle('active', active);
+        btn.setAttribute('aria-selected', active);
+    });
+    if (isYear) {
+        goToYear(Number((month || currentMonth).slice(0, 4)));
+    } else {
+        goToMonth(month || currentMonth);
+    }
+}
+
+document.querySelector('.mj-tabs').addEventListener('click', e => {
+    const btn = e.target.closest('button[data-view]');
+    if (btn) setView(btn.dataset.view);
+});
+
+setView(app.dataset.view);

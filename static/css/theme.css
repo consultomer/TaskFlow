@@ -1,0 +1,116 @@
+/* Shared colour tokens for every page. Dark mode is applied by
+   static/js/theme.js setting data-theme="dark" on <html>. */
+:root {
+    color-scheme: light;
+
+    --color-background-primary: #FFFFFF;
+    --color-background-secondary: #F8F7FF;
+    --color-background-tertiary: #F2F0FF;
+    --color-text-primary: #1A1625;
+    --color-text-secondary: #5C5470;
+    --color-text-tertiary: #8B839A;
+    --color-border-secondary: #E1DFF0;
+    --color-border-tertiary: #E8E6F5;
+
+    /* Accent is for text, icons and borders. The fill variants are backgrounds behind white text. */
+    --accent: #534AB7;
+    --accent-fill: #534AB7;
+    --accent-fill-hover: #3C3489;
+    --accent-strong: #3C3489;
+    --accent-soft: #EEEDFE;
+    --accent-border: #AFA9EC;
+
+    --danger: #A32D2D;
+    --danger-fill: #A32D2D;
+    --danger-fill-hover: #791F1F;
+    --danger-strong: #791F1F;
+    --danger-soft: #FCEBEB;
+    --danger-border: #F5B7B7;
+
+    --success: #0F6E56;
+    --success-soft: #E1F5EE;
+    --success-text: #2E7D4F;
+
+    --warning: #BA7517;
+    --warning-strong: #633806;
+    --warning-soft: #FAEEDA;
+    --tips-bg: #FCEFD2;
+    --tips-text: #9A4A00;
+
+    --neutral-soft: #F0F0F5;
+    --overlay: rgba(0, 0, 0, 0.5);
+    --shadow: rgba(0, 0, 0, 0.2);
+    --hover-tint: rgba(0, 0, 0, 0.05);
+    --auth-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+:root[data-theme="dark"] {
+    color-scheme: dark;
+
+    --color-background-primary: #1C1A27;
+    --color-background-secondary: #24212F;
+    --color-background-tertiary: #131119;
+    --color-text-primary: #ECEAF4;
+    --color-text-secondary: #B3ADC6;
+    --color-text-tertiary: #8C86A0;
+    --color-border-secondary: #3A3650;
+    --color-border-tertiary: #2D2A3D;
+
+    --accent: #A39BF5;
+    --accent-fill: #6157D1;
+    --accent-fill-hover: #7268E0;
+    --accent-strong: #CFCAFF;
+    --accent-soft: #2C2850;
+    --accent-border: #4A4480;
+
+    --danger: #F08585;
+    --danger-fill: #B53A3A;
+    --danger-fill-hover: #C94848;
+    --danger-strong: #F5A8A8;
+    --danger-soft: #3A1F24;
+    --danger-border: #6B2B32;
+
+    --success: #5CCBA4;
+    --success-soft: #173A30;
+    --success-text: #6FD49A;
+
+    --warning: #E3A953;
+    --warning-strong: #F0C27E;
+    --warning-soft: #3A2C15;
+    --tips-bg: #3A2C15;
+    --tips-text: #F0C27E;
+
+    --neutral-soft: #2A2838;
+    --overlay: rgba(0, 0, 0, 0.65);
+    --shadow: rgba(0, 0, 0, 0.5);
+    --hover-tint: rgba(255, 255, 255, 0.06);
+    --auth-gradient: linear-gradient(135deg, #1E1B3A 0%, #2D1B3D 100%);
+}
+
+/* Theme toggle button */
+.theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 0.5px solid var(--color-border-secondary);
+    background: var(--color-background-primary);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.15s ease;
+}
+
+.theme-toggle:hover {
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+}
+
+.theme-toggle-floating {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 50;
+}

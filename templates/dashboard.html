@@ -7,6 +7,8 @@
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" integrity="sha384-HtMZLkYo+pR5/u7zCzXxMJP6QoNnQJt1qkHM0EaOPvGDIzaVZbmYr/TlvUZ/sKAg" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" integrity="sha384-mY6asDzXlnHeimHHXw8cavPeArhEcAfnCibDFiaDPex3Fudo+edh/hnT7siZz8bg" crossorigin="anonymous">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
@@ -107,6 +109,7 @@
                 <span id="dateInfo">Loading...</span>
             </div>
             <div class="topbar-right">
+                <button type="button" class="theme-toggle" data-theme-toggle aria-label="Toggle dark mode"><i class="ti ti-moon"></i></button>
                 <button class="btn-new" onclick="showNewTaskModal()">
                     <i class="ti ti-plus"></i> New Task
                 </button>
@@ -127,7 +130,7 @@
                     <div class="s-label">Total Tasks</div>
                     <div class="s-val" id="statTotal">0</div>
                     <div class="s-sub">
-                        <span class="s-dot" style="background:#534AB7"></span>
+                        <span class="s-dot" style="background:var(--accent)"></span>
                         <span id="statInProgress">0</span> in progress
                     </div>
                 </div>
@@ -135,7 +138,7 @@
                     <div class="s-label">Completed Today</div>
                     <div class="s-val" id="statCompleted">0</div>
                     <div class="s-sub">
-                        <span class="s-dot" style="background:#0F6E56"></span>
+                        <span class="s-dot" style="background:var(--success)"></span>
                         Stay focused!
                     </div>
                 </div>
@@ -143,7 +146,7 @@
                     <div class="s-label">Time Tracked</div>
                     <div class="s-val" id="statTime">0h 0m</div>
                     <div class="s-sub">
-                        <span class="s-dot" style="background:#BA7517"></span>
+                        <span class="s-dot" style="background:var(--warning)"></span>
                         Keep going!
                     </div>
                 </div>
@@ -151,7 +154,7 @@
                     <div class="s-label">Overdue</div>
                     <div class="s-val" id="statOverdue">0</div>
                     <div class="s-sub">
-                        <span class="s-dot" style="background:#A32D2D"></span>
+                        <span class="s-dot" style="background:var(--danger)"></span>
                         <span id="overdueText">All on track</span>
                     </div>
                 </div>
@@ -185,7 +188,7 @@
                     {% if session.get('is_admin') %}
                     <div class="panel">
                         <div class="panel-hd">
-                            <h2><i class="ti ti-shield-check" style="color:#534AB7"></i> Admin Panel</h2>
+                            <h2><i class="ti ti-shield-check" style="color:var(--accent)"></i> Admin Panel</h2>
                             <button class="btn-secondary" onclick="showCreateUserModal()" style="font-size: 12px; padding: 5px 10px;">
                                 <i class="ti ti-plus"></i> Add User
                             </button>
@@ -203,19 +206,19 @@
                         </div>
                         <div class="tip-list">
                             <div class="tip-item">
-                                <i class="ti ti-lightbulb" style="color:#534AB7"></i>
+                                <i class="ti ti-lightbulb" style="color:var(--accent)"></i>
                                 <span>Start with the most important task</span>
                             </div>
                             <div class="tip-item">
-                                <i class="ti ti-clock" style="color:#1D9E75"></i>
+                                <i class="ti ti-clock" style="color:var(--success)"></i>
                                 <span>Use the timer to stay accountable</span>
                             </div>
                             <div class="tip-item">
-                                <i class="ti ti-check" style="color:#BA7517"></i>
+                                <i class="ti ti-check" style="color:var(--warning)"></i>
                                 <span>Complete small tasks to build momentum</span>
                             </div>
                             <div class="tip-item">
-                                <i class="ti ti-device-mobile" style="color:#A32D2D"></i>
+                                <i class="ti ti-device-mobile" style="color:var(--danger)"></i>
                                 <span>Minimize distractions during focus time</span>
                             </div>
                         </div>
@@ -228,8 +231,8 @@
                         </div>
                         <div id="activityFeed">
                             <div class="activity-item">
-                                <div class="act-icon" style="background:#EEEDFE">
-                                    <i class="ti ti-info-circle" style="color:#534AB7"></i>
+                                <div class="act-icon" style="background:var(--accent-soft)">
+                                    <i class="ti ti-info-circle" style="color:var(--accent)"></i>
                                 </div>
                                 <div>
                                     <div class="act-text">Welcome to TaskFlow! Create your first task to get started.</div>

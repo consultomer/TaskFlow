@@ -6,23 +6,42 @@
     <title>TaskFlow - Minijob Tracker</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💶</text></svg>">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" integrity="sha384-mY6asDzXlnHeimHHXw8cavPeArhEcAfnCibDFiaDPex3Fudo+edh/hnT7siZz8bg" crossorigin="anonymous">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/minijob.css') }}">
 </head>
 <body>
-    <div class="mj" id="app" data-month="{{ month }}">
+    <div class="mj" id="app" data-month="{{ month }}" data-view="{{ view }}" data-today-month="{{ today_month }}">
         <header class="mj-header">
             <div class="mj-title">
                 <a href="{{ url_for('pages.dashboard') }}" class="mj-back" title="Back to dashboard"><i class="ti ti-arrow-left"></i></a>
-                <h1>💶 Minijob Monthly Tracker</h1>
+                <div>
+                    <h1><i class="ti ti-coin-euro"></i> Minijob Tracker</h1>
+                    <span class="mj-subtitle" id="subtitle">Loading…</span>
+                </div>
             </div>
-            <div class="mj-month-nav">
-                <button type="button" id="prevMonth" title="Previous month"><i class="ti ti-chevron-left"></i></button>
-                <input type="month" id="monthPicker" value="{{ month }}" aria-label="Month">
-                <button type="button" id="nextMonth" title="Next month"><i class="ti ti-chevron-right"></i></button>
+            <div class="mj-header-right">
+                <button type="button" class="theme-toggle" data-theme-toggle aria-label="Toggle dark mode"><i class="ti ti-moon"></i></button>
+                <div class="mj-tabs" role="tablist">
+                    <button type="button" role="tab" data-view="month">Month</button>
+                    <button type="button" role="tab" data-view="year">Year</button>
+                </div>
+                <div class="mj-month-nav" id="monthNav">
+                    <button type="button" id="prevMonth" title="Previous month"><i class="ti ti-chevron-left"></i></button>
+                    <input type="month" id="monthPicker" value="{{ month }}" aria-label="Month">
+                    <button type="button" id="nextMonth" title="Next month"><i class="ti ti-chevron-right"></i></button>
+                    <button type="button" class="mj-today" id="thisMonth">This month</button>
+                </div>
+                <div class="mj-month-nav" id="yearNav" hidden>
+                    <button type="button" id="prevYear" title="Previous year"><i class="ti ti-chevron-left"></i></button>
+                    <span class="mj-year-label" id="yearLabel"></span>
+                    <button type="button" id="nextYear" title="Next year"><i class="ti ti-chevron-right"></i></button>
+                    <button type="button" class="mj-today" id="thisYear">This year</button>
+                </div>
             </div>
         </header>
-        <div class="mj-subtitle" id="subtitle">Loading…</div>
 
+        <div id="monthView">
         <section class="mj-top">
             <form class="mj-settings" id="settingsForm">
                 <label>Month <span id="setMonth"></span></label>
@@ -74,7 +93,7 @@
             </div>
 
             <aside class="mj-weeks">
-                <h2>📅 Weekly breakdown</h2>
+                <h2>Weekly breakdown</h2>
                 <table class="mj-week-table">
                     <thead>
                         <tr><th>KW</th><th>From</th><th>Hours</th><th>Earned</th><th>Tips</th><th>Hours bar</th></tr>
@@ -87,6 +106,37 @@
                 </p>
             </aside>
         </section>
+        </div>
+
+        <div id="yearView" hidden>
+            <section class="mj-year-top">
+                <div class="mj-kpis">
+                    <div class="kpi kpi-dark"><span>Worked</span><strong id="yKpiWorked">–</strong></div>
+                    <div class="kpi"><span>Earned</span><strong id="yKpiEarned">–</strong></div>
+                    <div class="kpi"><span>€ left to annual limit</span><strong id="yKpiLeft">–</strong></div>
+                    <div class="kpi"><span>Avg / active month</span><strong id="yKpiAvg">–</strong></div>
+                    <div class="kpi kpi-tips"><span>Tips</span><strong id="yKpiTips">–</strong></div>
+                    <div class="kpi kpi-pocket"><span>Total in pocket</span><strong id="yKpiPocket">–</strong></div>
+                </div>
+                <div class="mj-progress mj-year-progress">
+                    <div class="mj-progress-track"><div class="mj-progress-fill" id="yProgressFill"></div></div>
+                    <span class="mj-progress-label" id="yProgressLabel"></span>
+                    <div class="mj-progress-meta" id="yProgressMeta"></div>
+                </div>
+            </section>
+            <section class="mj-year-main">
+                <div class="mj-table-wrap">
+                    <table class="mj-table mj-year-table">
+                        <thead>
+                            <tr><th>Month</th><th>Shifts</th><th>Hours</th><th>Earned</th><th>% of limit</th><th>Tips</th><th>In pocket</th><th>Earned bar</th></tr>
+                        </thead>
+                        <tbody id="yearBody"></tbody>
+                        <tfoot><tr id="yearTotalRow"></tr></tfoot>
+                    </table>
+                </div>
+                <p class="mj-help">Click a month to open it. The annual limit is the sum of each month's limit.</p>
+            </section>
+        </div>
 
         <div class="mj-toast" id="toast" role="status" aria-live="polite"></div>
     </div>
