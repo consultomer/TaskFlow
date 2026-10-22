@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskFlow - Planner</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗓️</text></svg>">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" integrity="sha384-mY6asDzXlnHeimHHXw8cavPeArhEcAfnCibDFiaDPex3Fudo+edh/hnT7siZz8bg" crossorigin="anonymous">
+    <!-- Shared page shell (header, tabs, buttons, cards, toast) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/minijob.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/planner.css') }}">
+</head>
+<body>
+    <div class="mj" id="app" data-day="{{ day }}" data-today="{{ today }}" data-view="{{ view }}">
+        <header class="mj-header">
+            <div class="mj-title">
+                <a href="{{ url_for('pages.dashboard') }}" class="mj-back" title="Back to dashboard"><i class="ti ti-arrow-left"></i></a>
+                <div>
+                    <h1><i class="ti ti-calendar-time"></i> Planner</h1>
+                    <span class="mj-subtitle" id="subtitle">Loading…</span>
+                </div>
+            </div>
+            <div class="mj-header-right">
+                <button type="button" class="theme-toggle" data-theme-toggle aria-label="Toggle dark mode"><i class="ti ti-moon"></i></button>
+                <div class="mj-tabs" role="tablist">
+                    <button type="button" role="tab" data-view="day">Day</button>
+                    <button type="button" role="tab" data-view="week">Week</button>
+                    <button type="button" role="tab" data-view="routine">Routine</button>
+                </div>
+                <div class="mj-month-nav" id="dateNav">
+                    <button type="button" id="prevDate" title="Previous"><i class="ti ti-chevron-left"></i></button>
+                    <input type="date" id="datePicker" value="{{ day }}" aria-label="Date">
+                    <button type="button" id="nextDate" title="Next"><i class="ti ti-chevron-right"></i></button>
+                    <button type="button" class="mj-today" id="goToday">Today</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Day -->
+        <div id="dayView" class="pl-view" hidden>
+            <section class="pl-day">
+                <div class="pl-timeline">
+                    <div class="pl-day-bar">
+                        <span class="pl-notice" id="dayNotice"></span>
+                        <button type="button" class="mj-btn" id="resetDay" hidden><i class="ti ti-restore"></i> Back to routine</button>
+                        <button type="button" class="mj-btn mj-btn-primary" id="addBlock"><i class="ti ti-plus"></i> Add block</button>
+                    </div>
+                    <div class="pl-missed" id="missedBox" hidden></div>
+                    <ol class="pl-blocks" id="blockList"></ol>
+                </div>
+
+                <aside class="pl-side">
+                    <div class="pl-goal" data-goal="german">
+                        <div class="pl-goal-head"><span><i class="ti ti-language"></i> German</span><strong id="goalGerman"></strong></div>
+                        <div class="pl-bar"><div class="pl-bar-fill" id="goalGermanBar"></div></div>
+                    </div>
+                    <div class="pl-goal" data-goal="k8s">
+                        <div class="pl-goal-head"><span><i class="ti ti-brand-kubernetes"></i> Kubernetes (CKA)</span><strong id="goalK8s"></strong></div>
+                        <div class="pl-bar"><div class="pl-bar-fill" id="goalK8sBar"></div></div>
+                    </div>
+                    <div class="pl-goal" data-goal="jobs">
+                        <div class="pl-goal-head"><span><i class="ti ti-briefcase"></i> Job search</span><strong id="goalJobs"></strong></div>
+                        <div class="pl-bar"><div class="pl-bar-fill" id="goalJobsBar"></div></div>
+                        <div class="pl-counter">
+                            <span>Applications sent</span>
+                            <button type="button" class="mj-btn" data-apps="-1" aria-label="One less">−</button>
+                            <strong id="appCount">0</strong>
+                            <button type="button" class="mj-btn" data-apps="1" aria-label="One more">+</button>
+                        </div>
+                    </div>
+                    <div class="pl-goal pl-goal-day">
+                        <div class="pl-goal-head"><span><i class="ti ti-target-arrow"></i> Goal blocks done</span><strong id="goalDay"></strong></div>
+                        <div class="pl-bar"><div class="pl-bar-fill" id="goalDayBar"></div></div>
+                    </div>
+
+                    <h2>Tasks to plan</h2>
+                    <ul class="pl-unplanned" id="unplannedList"></ul>
+                    <p class="mj-help">
+                        Add tasks inside a block, or plan an open task into a block with the menu.
+                        <i class="ti ti-player-play"></i> starts the TaskFlow timer.
+                        Work days come from the <a href="{{ url_for('minijob.minijob_page') }}">Minijob tracker</a>:
+                        study and job blocks that clash with a shift are moved into free time.
+                    </p>
+                </aside>
+            </section>
+        </div>
+
+        <!-- Week -->
+        <div id="weekView" class="pl-view" hidden>
+            <section class="pl-week">
+                <div class="mj-kpis pl-week-kpis">
+                    <div class="kpi kpi-dark"><span>German</span><strong id="wkGerman">–</strong></div>
+                    <div class="kpi"><span>CKA study</span><strong id="wkK8s">–</strong></div>
+                    <div class="kpi"><span>Job search</span><strong id="wkJobs">–</strong></div>
+                    <div class="kpi kpi-pocket"><span>Applications sent</span><strong id="wkApps">–</strong></div>
+                    <div class="kpi"><span>Work</span><strong id="wkWork">–</strong></div>
+                </div>
+                <div class="mj-table-wrap">
+                    <table class="mj-table pl-week-table">
+                        <thead>
+                            <tr><th>Day</th><th>Work</th><th>German</th><th>CKA</th><th>Job search</th><th>Applications</th><th>Goal blocks</th><th></th></tr>
+                        </thead>
+                        <tbody id="weekBody"></tbody>
+                    </table>
+                </div>
+                <p class="mj-help">Times show done / planned. A block counts as done when you tick it in the Day view. Click a day to open it.</p>
+            </section>
+        </div>
+
+        <!-- Routine -->
+        <div id="routineView" class="pl-view" hidden>
+            <section class="pl-routine">
+                <div class="pl-routine-bar">
+                    <div class="mj-tabs" id="weekdayTabs"></div>
+                    <div class="pl-routine-actions">
+                        <button type="button" class="mj-btn" id="copyWeekdays"><i class="ti ti-copy"></i> Copy to Mon–Sat</button>
+                        <button type="button" class="mj-btn" id="copyAll"><i class="ti ti-copy"></i> Copy to all days</button>
+                        <button type="button" class="mj-btn" id="resetRoutine"><i class="ti ti-restore"></i> Reset to default</button>
+                    </div>
+                </div>
+                <div class="mj-table-wrap">
+                    <table class="mj-table pl-routine-table">
+                        <thead><tr><th>Start</th><th>End</th><th>Block</th><th>Type</th><th>Length</th><th></th></tr></thead>
+                        <tbody id="routineBody"></tbody>
+                    </table>
+                </div>
+                <div class="pl-routine-foot">
+                    <button type="button" class="mj-btn" id="addRoutineRow"><i class="ti ti-plus"></i> Add block</button>
+                    <span class="pl-routine-totals" id="routineTotals"></span>
+                </div>
+                <p class="mj-help">
+                    This is your normal week. Changes save automatically and apply to every day that you haven't edited by hand.
+                    To change just one day (e.g. an appointment), edit it in the Day view instead.
+                </p>
+            </section>
+        </div>
+
+        <div class="mj-toast" id="toast" role="status" aria-live="polite"></div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/planner.js') }}"></script>
+</body>
+</html>

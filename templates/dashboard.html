@@ -36,6 +36,9 @@
                 <button type="button" class="nav-item" onclick="filterTasks('completed')">
                     <i class="ti ti-circle-check"></i> Completed
                 </button>
+                <a class="nav-item" href="{{ url_for('planner.planner_page') }}">
+                    <i class="ti ti-calendar-time"></i> Planner
+                </a>
                 <a class="nav-item" href="{{ url_for('minijob.minijob_page') }}">
                     <i class="ti ti-coin-euro"></i> Minijob Tracker
                 </a>

@@ -186,8 +186,10 @@ def init_db():
 
         # Imported here to avoid a circular import (minijob uses get_db_connection)
         from utils.minijob import init_minijob_tables
+        from utils.planner import init_planner_tables
 
         init_minijob_tables()
+        init_planner_tables()
         logger.info("Database initialized successfully")
     except Exception:
         logger.exception("Failed to initialize database")
@@ -485,6 +487,7 @@ def update_task(user_id, task_id, **kwargs):
         "timer_start",
         "accumulated_time",
         "total_time",
+        "planned_block",
     ]
 
     # Filter allowed fields
