@@ -182,8 +182,13 @@ def init_db():
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_tasks_completed ON tasks (completed)")
 
         conn.commit()
-        logger.info("Database initialized successfully")
         conn.close()
+
+        # Imported here to avoid a circular import (minijob uses get_db_connection)
+        from utils.minijob import init_minijob_tables
+
+        init_minijob_tables()
+        logger.info("Database initialized successfully")
     except Exception:
         logger.exception("Failed to initialize database")
         raise

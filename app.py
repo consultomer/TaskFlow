@@ -4,7 +4,7 @@ from flask import Flask
 from dotenv import load_dotenv
 
 from utils.database import init_db, init_admin_user, DATABASE_PATH, migrate_json_to_sqlite
-from routes import auth_bp, pages_bp, tasks_bp, timer_bp, user_bp, admin_bp
+from routes import auth_bp, pages_bp, tasks_bp, timer_bp, user_bp, admin_bp, minijob_bp
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -28,6 +28,7 @@ app.register_blueprint(tasks_bp)
 app.register_blueprint(timer_bp)
 app.register_blueprint(user_bp)
 app.register_blueprint(admin_bp)
+app.register_blueprint(minijob_bp)
 
 
 if __name__ == "__main__":

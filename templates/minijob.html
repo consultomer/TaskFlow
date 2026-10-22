@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskFlow - Minijob Tracker</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💶</text></svg>">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" integrity="sha384-mY6asDzXlnHeimHHXw8cavPeArhEcAfnCibDFiaDPex3Fudo+edh/hnT7siZz8bg" crossorigin="anonymous">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/minijob.css') }}">
+</head>
+<body>
+    <div class="mj" id="app" data-month="{{ month }}">
+        <header class="mj-header">
+            <div class="mj-title">
+                <a href="{{ url_for('pages.dashboard') }}" class="mj-back" title="Back to dashboard"><i class="ti ti-arrow-left"></i></a>
+                <h1>💶 Minijob Monthly Tracker</h1>
+            </div>
+            <div class="mj-month-nav">
+                <button type="button" id="prevMonth" title="Previous month"><i class="ti ti-chevron-left"></i></button>
+                <input type="month" id="monthPicker" value="{{ month }}" aria-label="Month">
+                <button type="button" id="nextMonth" title="Next month"><i class="ti ti-chevron-right"></i></button>
+            </div>
+        </header>
+        <div class="mj-subtitle" id="subtitle">Loading…</div>
+
+        <section class="mj-top">
+            <form class="mj-settings" id="settingsForm">
+                <label>Month <span id="setMonth"></span></label>
+                <label for="setWage">Hourly wage (€) <input id="setWage" type="number" step="0.01" min="0.01" required></label>
+                <label for="setLimit">Minijob limit (€/mo) <input id="setLimit" type="number" step="1" min="1" required></label>
+                <label>Max hours at limit <span id="setMax"></span></label>
+                <label for="setTarget">Own target (optional) <input id="setTarget" type="text" placeholder="e.g. 40:00"></label>
+                <label>Monthly target <strong id="setMonthlyTarget"></strong></label>
+            </form>
+
+            <div class="mj-kpis-wrap">
+                <div class="mj-kpis">
+                    <div class="kpi kpi-dark"><span>Worked</span><strong id="kpiWorked">–</strong></div>
+                    <div class="kpi"><span>Earned</span><strong id="kpiEarned">–</strong></div>
+                    <div class="kpi"><span>€ left to limit</span><strong id="kpiLeft">–</strong></div>
+                    <div class="kpi"><span>Hours left</span><strong id="kpiHoursLeft">–</strong></div>
+                    <div class="kpi kpi-tips"><span>Tips 💰</span><strong id="kpiTips">–</strong></div>
+                    <div class="kpi kpi-pocket"><span>Total in pocket</span><strong id="kpiPocket">–</strong></div>
+                </div>
+                <div class="mj-progress-row">
+                    <div class="mj-progress">
+                        <div class="mj-progress-track"><div class="mj-progress-fill" id="progressFill"></div></div>
+                        <span class="mj-progress-label" id="progressLabel"></span>
+                        <div class="mj-progress-meta" id="progressMeta"></div>
+                    </div>
+                    <div class="mj-tips-note">
+                        <em id="tipsNote"></em>
+                        <em id="tipsMeta"></em>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="mj-main">
+            <div class="mj-table-wrap">
+                <table class="mj-table" id="daysTable">
+                    <thead>
+                        <tr>
+                            <th>KW</th><th>Day</th><th>Date</th><th>Start</th><th>End</th><th>Break</th>
+                            <th>Net</th><th>Running</th><th>Earned</th><th>Running €</th><th>Status</th>
+                            <th>Tips 💰</th><th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody id="daysBody"></tbody>
+                    <tfoot>
+                        <tr id="totalRow"></tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <aside class="mj-weeks">
+                <h2>📅 Weekly breakdown</h2>
+                <table class="mj-week-table">
+                    <thead>
+                        <tr><th>KW</th><th>From</th><th>Hours</th><th>Earned</th><th>Tips</th><th>Hours bar</th></tr>
+                    </thead>
+                    <tbody id="weeksBody"></tbody>
+                </table>
+                <p class="mj-help">
+                    Type times as <code>18:00</code> or <code>1800</code>. Break accepts <code>0:30</code>, <code>30</code> or <code>No</code>.
+                    Type <code>off</code> in Start (or click the status) to mark a day off. Shifts past midnight are handled automatically.
+                </p>
+            </aside>
+        </section>
+
+        <div class="mj-toast" id="toast" role="status" aria-live="polite"></div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/minijob.js') }}"></script>
+</body>
+</html>
