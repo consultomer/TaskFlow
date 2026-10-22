@@ -16,7 +16,6 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_HOURLY_WAGE = 13.00
 DEFAULT_MONTHLY_LIMIT = 603.00
-LATE_SHIFT_END_MINUTES = 22 * 60  # shifts ending at/after 22:00 get a moon marker
 
 MONTH_RE = re.compile(r"^\d{4}-(0[1-9]|1[0-2])$")
 TIME_RE = re.compile(r"^([01]?\d|2[0-3]):([0-5]\d)$")
@@ -277,7 +276,6 @@ def build_month_summary(user_id, year, month, today=None):
             week["earned"] += earned
         week["tips"] += tips
 
-        end_min = time_to_minutes(end_time)
         rows.append(
             {
                 "date": iso,
@@ -293,7 +291,6 @@ def build_month_summary(user_id, year, month, today=None):
                 "earned": earned,
                 "running_earned": round(running_earned, 2) if net is not None else None,
                 "status": status,
-                "late": net is not None and end_min is not None and end_min >= LATE_SHIFT_END_MINUTES,
                 "tips": tips,
                 "notes": entry.get("notes") or "",
             }

@@ -136,7 +136,7 @@ function render(data) {
 }
 
 function statusCell(day) {
-    if (day.status === 'logged') return `✅ Logged${day.late ? ' 🌙' : ''}`;
+    if (day.status === 'logged') return '✅ Logged';
     if (day.status === 'off') return '🏖️ Off';
     if (day.status === 'open') return '<span class="status-open">⏳ Open</span>';
     return 'Mark off';
